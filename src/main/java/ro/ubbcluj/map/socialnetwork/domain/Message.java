@@ -2,14 +2,16 @@ package ro.ubbcluj.map.socialnetwork.domain;
 
 import java.time.LocalDateTime;
 
-public class Message extends Entity<Long> {
+public class Message extends Entity<Tuple<Long,Long>> {
 
     private String text;
     private Long idSender;
     private Long idReceiver;
     private LocalDateTime date;
 
-    public Message() {
+    public Message(Long idSender, Long idReceiver, String text) {
+        this.idSender = idSender;
+        this.idReceiver = idReceiver;
         this.date = LocalDateTime.now();
     }
 

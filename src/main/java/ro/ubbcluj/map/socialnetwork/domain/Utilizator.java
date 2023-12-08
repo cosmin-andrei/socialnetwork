@@ -1,19 +1,27 @@
 package ro.ubbcluj.map.socialnetwork.domain;
 
-
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
 
 public class Utilizator extends Entity<Long> {
+
+    private String username;
     private String firstName;
     private String lastName;
-    private List<Utilizator> friends;
+    private String password;
 
-    public Utilizator(String firstName, String lastName) {
+    public Utilizator(String username, String firstName, String lastName) {
+        this.username = username;
         this.firstName = firstName;
         this.lastName = lastName;
-        this.friends = new ArrayList<>();
+    }
+
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
     }
 
     public String getFirstName() {
@@ -32,25 +40,12 @@ public class Utilizator extends Entity<Long> {
         this.lastName = lastName;
     }
 
-//    public List<Utilizator> getFriends() {
-//        return friends;
-//    }
-
-    @Override
-    public String toString() {
-        return "Utilizator{" +
-                "firstName='" + firstName + '\'' +
-                ", lastName='" + lastName + //'\'' +
-//                ", friends=" + this.stringFriends() +
-                '}';
+    public String getPassword() {
+        return password;
     }
 
-    public String stringFriends(){
-        StringBuilder Sfriends = new StringBuilder();
-        for(Utilizator u: this.friends){
-            Sfriends.append(u.getId()).append(",");
-        }
-        return Sfriends.toString();
+    public void setPassword(String password) {
+        this.password = password;
     }
 
     @Override
@@ -60,12 +55,10 @@ public class Utilizator extends Entity<Long> {
         Utilizator that = (Utilizator) o;
         return getFirstName().equals(that.getFirstName()) &&
                 getLastName().equals(that.getLastName());
-//                &&
-//                getFriends().equals(that.getFriends());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getFirstName(), getLastName()/*, getFriends()*/);
+        return Objects.hash(getFirstName(), getLastName());
     }
 }

@@ -1,6 +1,7 @@
 package ro.ubbcluj.map.socialnetwork.repository;
 
 import ro.ubbcluj.map.socialnetwork.domain.Message;
+import ro.ubbcluj.map.socialnetwork.domain.Tuple;
 import ro.ubbcluj.map.socialnetwork.domain.validators.MessageValidator;
 
 import java.sql.*;
@@ -8,7 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-public class MessageDBRepository implements Repository<Long, Message> {
+public class MessageDBRepository implements Repository<Tuple<Long, Long>, Message> {
 
     private final MessageValidator validator;
     private final String url;
@@ -24,30 +25,28 @@ public class MessageDBRepository implements Repository<Long, Message> {
 
 
     @Override
-    public Optional<Message> findOne(Long aLong) throws SQLException {
+    public Optional<Message> findOne(Tuple<Long, Long> longLongTuple) {
         try (Connection connection = DriverManager.getConnection(url, username, password);
-             PreparedStatement statement = connection.prepareStatement("SELECT * FROM \"messages\" WHERE id = ?;")) {
-             statement.setLong(1, aLong);
+             PreparedStatement statement = connection.prepareStatement("SELECT * FROM \"messages\" WHERE sender = ? and receiver =?;")) {
+            statement.setLong(1, longLongTuple.getLeft());
+            statement.setLong(2, longLongTuple.getRight());
             try (ResultSet resultSet = statement.executeQuery()) {
 
-                Long id = resultSet.getLong("id");
                 Long idSender = resultSet.getLong("sender");
                 Long idReceiver = resultSet.getLong("receiver");
                 String text = resultSet.getString("text");
                 Timestamp date = resultSet.getTimestamp("data");
 
-                Message message = new Message();
-                message.setId(id);
-                message.setIdSender(idSender);
-                message.setIdReceiver(idReceiver);
+                Message message = new Message(idSender, idReceiver, text);
+                message.setId(new Tuple<>(idSender, idReceiver));
                 message.setDate(date.toLocalDateTime());
 
+                return Optional.of(message);
             }
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
 
-        return Optional.empty();
     }
 
     @Override
@@ -57,20 +56,16 @@ public class MessageDBRepository implements Repository<Long, Message> {
         try (Connection connection = DriverManager.getConnection(url, username, password);
              Statement statement = connection.createStatement()) {
 
-            try (ResultSet resultSet = statement.executeQuery("SELECT * FROM \"messages\"")) {
+            try (ResultSet resultSet = statement.executeQuery("SELECT * FROM messages")) {
 
                 while (resultSet.next()) {
-                    Long id = resultSet.getLong("id");
                     Long idSender = resultSet.getLong("sender");
                     Long idReceiver = resultSet.getLong("receiver");
                     String text = resultSet.getString("text");
-                    Timestamp date = resultSet.getTimestamp("data");
+                    Timestamp date = resultSet.getTimestamp("date");
 
-                    Message message = new Message();
-                    message.setId(id);
-                    message.setIdSender(idSender);
-                    message.setIdReceiver(idReceiver);
-                    message.setText(text);
+                    Message message = new Message(idSender, idReceiver, text);
+                    message.setId(new Tuple<>(idSender,idReceiver));
                     message.setDate(date.toLocalDateTime());
 
                     messages.add(message);
@@ -94,13 +89,12 @@ public class MessageDBRepository implements Repository<Long, Message> {
         validator.validate(entity);
 
         try (Connection connection = DriverManager.getConnection(url, username, password);
-             PreparedStatement statement = connection.prepareStatement("insert into \"messages\"(id, sender, receiver, text, data) values (?,?,?,?,?)")) {
+             PreparedStatement statement = connection.prepareStatement("insert into \"messages\"(sender, receiver, text, date) values (?,?,?,?)")) {
 
-            statement.setLong(1, entity.getId());
-            statement.setLong(2, entity.getIdSender());
-            statement.setLong(3, entity.getIdReceiver());
-            statement.setString(4, entity.getText());
-            statement.setDate(5, Date.valueOf(entity.getDate().toLocalDate()));
+            statement.setLong(1, entity.getIdSender());
+            statement.setLong(2, entity.getIdReceiver());
+            statement.setString(3, entity.getText());
+            statement.setDate(4, Date.valueOf(entity.getDate().toLocalDate()));
 
             statement.executeUpdate();
 
@@ -108,13 +102,14 @@ public class MessageDBRepository implements Repository<Long, Message> {
             throw new RuntimeException(e);
         }
 
-        return Optional.empty();
+        return Optional.of(entity);
     }
 
     @Override
-    public Optional<Message> delete(Long aLong) {
+    public Optional<Message> delete(Tuple<Long, Long> longLongTuple) {
         return Optional.empty();
     }
+
 
     @Override
     public Optional<Message> update(Message entity) {

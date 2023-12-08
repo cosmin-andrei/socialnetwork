@@ -96,7 +96,8 @@ public class CerereService implements Observable {
     @Override
     public void notifyAllObservers() throws SQLException {
         for (Observer observer : observers) {
-            observer.update();
+                observer.update();
         }
     }
+
 }

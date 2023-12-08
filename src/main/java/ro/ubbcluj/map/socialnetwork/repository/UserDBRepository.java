@@ -8,6 +8,7 @@ import java.sql.*;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 
 public class UserDBRepository implements Repository<Long, Utilizator> {
 
@@ -33,9 +34,12 @@ public class UserDBRepository implements Repository<Long, Utilizator> {
             statement.setInt(1, Math.toIntExact(longID));
             ResultSet resultSet = statement.executeQuery();
             if(resultSet.next()) {
+                String username = resultSet.getString("username");
                 String firstName = resultSet.getString("first_name");
                 String lastName = resultSet.getString("last_name");
-                Utilizator u = new Utilizator(firstName, lastName);
+                String password = resultSet.getString("password");
+                Utilizator u = new Utilizator(username, firstName, lastName);
+                u.setPassword(password);
                 u.setId(longID);
                 return Optional.of(u);
             }
@@ -57,9 +61,11 @@ public class UserDBRepository implements Repository<Long, Utilizator> {
             while (resultSet.next())
             {
                 Long id= resultSet.getLong("id");
-                String firstName=resultSet.getString("first_name");
-                String lastName=resultSet.getString("last_name");
-                Utilizator user=new Utilizator(firstName,lastName);
+                String username = resultSet.getString("username");
+                String firstName = resultSet.getString("first_name");
+                String lastName = resultSet.getString("last_name");
+//                String password = resultSet.getString("password");
+                Utilizator user=new Utilizator(username,firstName,lastName);
                 user.setId(id);
                 users.add(user);
 
@@ -79,10 +85,16 @@ public class UserDBRepository implements Repository<Long, Utilizator> {
 
         validator.validate(utilizator);
 
-        try{
-            Connection connection = DriverManager.getConnection(url, username, password);
-            Statement statement = connection.createStatement();
-            statement.executeUpdate("INSERT INTO users(id, first_name, last_name) VALUES ('"+utilizator.getId()+"', '"+utilizator.getFirstName()+"', '"+utilizator.getLastName()+"')");
+        try (Connection connection = DriverManager.getConnection(url, username, password);
+             PreparedStatement statement = connection.prepareStatement(
+                     "INSERT INTO users(id, username, first_name, last_name, password) VALUES (?, ?, ?, ?, ?)"
+             )) {
+            statement.setLong(1, utilizator.getId());
+            statement.setString(2, utilizator.getUsername());
+            statement.setString(3, utilizator.getFirstName());
+            statement.setString(4, utilizator.getLastName());
+            statement.setString(5, utilizator.getPassword());
+            statement.executeUpdate();
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
@@ -120,21 +132,30 @@ public class UserDBRepository implements Repository<Long, Utilizator> {
              PreparedStatement statement = connection.prepareStatement(
                      "UPDATE users SET first_name = ?, last_name = ? WHERE id = ?"
              )) {
-
             statement.setString(1, utilizator.getFirstName());
             statement.setString(2, utilizator.getLastName());
             statement.setLong(3, utilizator.getId());
-
-            int rowsAffected = statement.executeUpdate();
-            if (rowsAffected > 0) {
-                return Optional.of(utilizator);
-            }
+            statement.executeUpdate();
 
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
 
+
         return Optional.empty();
+    }
+
+    public int countUsers() throws SQLException {
+        try (Connection connection = DriverManager.getConnection(url, username, password);
+             PreparedStatement statement = connection.prepareStatement("SELECT COUNT(*) FROM users");
+             ResultSet resultSet = statement.executeQuery()) {
+
+            if (resultSet.next()) {
+                return resultSet.getInt(1);
+            } else {
+                throw new SQLException("Nu s-a putut obține numărul de înregistrări.");
+            }
+        }
     }
 
 }

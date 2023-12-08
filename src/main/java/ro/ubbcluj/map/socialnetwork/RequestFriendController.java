@@ -2,7 +2,6 @@ package ro.ubbcluj.map.socialnetwork;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
@@ -13,85 +12,110 @@ import ro.ubbcluj.map.socialnetwork.domain.Tuple;
 import ro.ubbcluj.map.socialnetwork.domain.Utilizator;
 import ro.ubbcluj.map.socialnetwork.observer.Observer;
 import ro.ubbcluj.map.socialnetwork.service.CerereService;
+import ro.ubbcluj.map.socialnetwork.service.PrietenieService;
 import ro.ubbcluj.map.socialnetwork.service.UtilizatorService;
 
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Iterator;
+import java.util.Objects;
 
 public class RequestFriendController implements Observer {
+    @FXML
+    private TextField filterUsername;
     private CerereService cerereService;
     private UtilizatorService userService;
     private final ObservableList<Utilizator> model = FXCollections.observableArrayList();
-    private Long ID;
+    private Utilizator utilizator;
+    private PrietenieService prietenieService;
     private Stage stage;
-    @FXML
-    private TextField textFieldIDPrieten;
-    @FXML
-    private Button buttonAdd;
+
+
     @FXML
     TableView<Utilizator> tableViewUser;
     @FXML
     TableColumn<Utilizator, String> tableColumnPrenume;
     @FXML
-    TableColumn<Utilizator, Long> tableColumnID;
+    TableColumn<Utilizator, String> tableColumnUsername;
     @FXML
     TableColumn<Utilizator, String>  tableColumnNume;
 
 
     @FXML
     public void initialize() {
-        tableColumnID.setCellValueFactory(new PropertyValueFactory<>("id"));
+        tableColumnUsername.setCellValueFactory(new PropertyValueFactory<>("username"));
         tableColumnNume.setCellValueFactory(new PropertyValueFactory<>("firstName"));
         tableColumnPrenume.setCellValueFactory(new PropertyValueFactory<>("lastName"));
         tableViewUser.setItems(model);
+
+        filterUsername.textProperty().addListener((observable, oldValue, newValue) -> {
+            try {
+                // Obține toți utilizatorii
+                Collection<Utilizator> all = userService.getAll();
+
+                // Filtrare în funcție de conținutul câmpului filterUsername
+                Collection<Utilizator> filteredUsers = new ArrayList<>();
+                for (Utilizator user : all) {
+                    if (user.getUsername().toLowerCase().contains(newValue.toLowerCase())) {
+                        filteredUsers.add(user);
+                    }
+                }
+
+                // Actualizează modelul cu utilizatorii filtrați
+                model.setAll(filteredUsers);
+            } catch (SQLException e) {
+                // Gestionează excepțiile
+                e.printStackTrace();
+            }
+        });
     }
 
-    public void setRequestService(UtilizatorService userService, CerereService cerereService, Stage stage, Long ID) throws SQLException {
+    public void setRequestService(UtilizatorService userService, CerereService cerereService, PrietenieService prietenieService, Stage stage, Utilizator utilizator) throws SQLException {
         this.userService = userService;
         this.cerereService = cerereService;
+        this.prietenieService= prietenieService;
         this.stage = stage;
-        this.ID = ID;
+        this.utilizator = utilizator;
+        cerereService.registerObserver(this);
         initModel();
     }
 
+
     private void initModel() throws SQLException {
-        Collection<Utilizator> all = (Collection<Utilizator>) userService.getAll();
+        Collection<Utilizator> all = userService.getAll();
+        Iterator<Utilizator> iterator = all.iterator();
+        while (iterator.hasNext()) {
+            Utilizator user = iterator.next();
+            if (Objects.equals(user.getId(), utilizator.getId())) {
+                iterator.remove();
+            }
+            else if(prietenieService.verifyPrietenie(utilizator.getId(), user.getId())){
+                iterator.remove();
+            }
+        }
+
         model.setAll(all);
     }
 
-    public void handleAdd(ActionEvent actionEvent) {
-        try {
-            String idPrieten = textFieldIDPrieten.getText().trim();
 
-            if (idPrieten.isEmpty()) {
-                MessageAlert.showErrorMessage(null, "Introduceti un ID de prieten.");
-                return;
-            }
-
-            long idPrietenLong;
-            try {
-                idPrietenLong = Long.parseLong(idPrieten);
-            } catch (NumberFormatException e) {
-                MessageAlert.showErrorMessage(null, "ID-ul prietenului trebuie să fie un număr valid.");
-                return;
-            }
-
-            if (ID.equals(idPrietenLong)) {
-                MessageAlert.showErrorMessage(null, "Nu te poți împrieteni cu tine însuți.");
-            } else {
-                CererePrietenie cererePrietenie = new CererePrietenie();
-                cererePrietenie.setId(new Tuple<>(ID, idPrietenLong));
-                cererePrietenie.setStatus("PENDING");
+    public void handleAdd() throws SQLException {
+        Utilizator user = tableViewUser.getSelectionModel().getSelectedItem();
+        if (user != null) {
+            CererePrietenie cererePrietenie = new CererePrietenie();
+            cererePrietenie.setId(new Tuple<>(utilizator.getId(), user.getId()));
+            cererePrietenie.setStatus("PENDING");
+            try{
                 cerereService.addCerere(cererePrietenie);
                 MessageAlert.showMessage(stage, Alert.AlertType.INFORMATION, "Cerere prietenie", "Cererea a fost trimisă cu succes.");
                 stage.close();
+            } catch (Exception e){
+                MessageAlert.showErrorMessage(null, "Eroare: " + e.getMessage());
             }
-        } catch (Throwable t) {
-//            t.printStackTrace(); // Afișează informații despre excepție în consolă
-            MessageAlert.showErrorMessage(stage, "Eroare la trimiterea cererii: " + t.getMessage());
+        } else {
+            MessageAlert.showErrorMessage(null, "Niciun utilizator selectat.");
         }
     }
-
     @Override
     public void update() throws SQLException {
         initModel();

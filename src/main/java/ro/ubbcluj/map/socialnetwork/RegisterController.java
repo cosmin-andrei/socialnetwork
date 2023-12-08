@@ -1,21 +1,15 @@
 package ro.ubbcluj.map.socialnetwork;
 
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
-import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
 import ro.ubbcluj.map.socialnetwork.controller.MessageAlert;
 import ro.ubbcluj.map.socialnetwork.domain.Utilizator;
 import ro.ubbcluj.map.socialnetwork.service.UtilizatorService;
 
-public class EditUserController {
-
-    @FXML
-    private Button buttonSave;
-
-    @FXML
-    private Button buttonCancel;
+public class RegisterController {
 
     private UtilizatorService utilizatorService;
     private Stage stage;
@@ -26,33 +20,33 @@ public class EditUserController {
     private TextField textFieldPrenume;
     @FXML
     private TextField textFieldNume;
+    @FXML
+    private TextField textFieldPassword;
 
-    public void setUtilizatorService(UtilizatorService utilizatorService, Stage stage, Utilizator utilizator) {
+    public void setService(UtilizatorService utilizatorService, Stage stage){
         this.utilizatorService = utilizatorService;
         this.stage = stage;
 
-        textFieldUsername.setText(utilizator.getUsername());
-        textFieldPrenume.setText(utilizator.getFirstName());
-        textFieldNume.setText(utilizator.getLastName());
-
-        textFieldUsername.setEditable(false);
     }
 
-    public void handleSave() {
+    public void handleCreate() {
         String username = textFieldUsername.getText();
         String firstName = textFieldPrenume.getText();
         String lastName = textFieldNume.getText();
-        try{
-            utilizatorService.updateUtilizator(username, firstName, lastName);
-            MessageAlert.showMessage(stage, Alert.AlertType.INFORMATION,"Update","Ti-ai actualizat profilul cu succes");
+        String password = textFieldPassword.getText();
+        Utilizator utilizator = new Utilizator(username,firstName,lastName);
+        utilizator.setPassword(password);
+        try {
+            utilizatorService.adaugaUtilizator(utilizator);
+            MessageAlert.showMessage(stage, Alert.AlertType.INFORMATION,"Creare cont","Cont creat cu succes!");
             stage.close();
         }catch (Exception e){
             MessageAlert.showErrorMessage(null, "Eroare: " + e.getMessage());
         }
-
     }
 
-    public void handleCancel() {
+
+    public void handleCancel(ActionEvent actionEvent) {
         stage.close();
     }
 }

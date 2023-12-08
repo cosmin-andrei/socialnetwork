@@ -43,21 +43,16 @@ public class PrietenieService implements Observable {
     public List<Utilizator> getPrieteniById(Long userId) throws SQLException {
         List<Utilizator> prieteni = new ArrayList<>();
 
-        // Filtrăm prieteniile care implică utilizatorul cu ID-ul dat
         List<Prietenie> prieteniiUtilizatorului = GetAll().stream()
                 .filter(prietenie -> prietenie.getId().getLeft().equals(userId) || prietenie.getId().getRight().equals(userId))
-                .collect(Collectors.toList());
+                .toList();
 
-//        System.out.println(prieteniiUtilizatorului);
-
-        // Adăugăm utilizatorii prieteni în lista de prieteni
         for (Prietenie prietenie : prieteniiUtilizatorului) {
             Long prietenId = (prietenie.getId().getLeft().equals(userId) ? prietenie.getId().getRight() : prietenie.getId().getLeft());
             Utilizator prieten = repoUtilizator.findOne(prietenId).orElseThrow(() -> new RuntimeException("Utilizator negăsit pentru ID: " + prietenId));
             prieteni.add(prieten);
         }
 
-        System.out.println(prieteni);
         return prieteni;
 
     }
@@ -209,5 +204,13 @@ public class PrietenieService implements Observable {
         for (Observer observer : observers) {
             observer.update();
         }
+    }
+
+    public boolean verifyPrietenie(Long id, Long id1) throws SQLException {
+        Optional<Prietenie> prietenie = repoPrietenie.findOne(new Tuple<>(id,id1));
+        Optional<Prietenie> prietenie1 = repoPrietenie.findOne(new Tuple<>(id1, id));
+        if(prietenie.isPresent() || prietenie1.isPresent())
+            return true;
+        return false;
     }
 }
