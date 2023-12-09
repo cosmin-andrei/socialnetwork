@@ -1,10 +1,8 @@
 package ro.ubbcluj.map.socialnetwork;
 
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
-import javafx.scene.control.Hyperlink;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.Modality;
@@ -13,13 +11,10 @@ import ro.ubbcluj.map.socialnetwork.controller.MessageAlert;
 import ro.ubbcluj.map.socialnetwork.domain.Utilizator;
 import ro.ubbcluj.map.socialnetwork.service.UtilizatorService;
 
-import java.io.IOException;
 import java.sql.SQLException;
 
 public class LoginController {
 
-    @FXML
-    private Hyperlink linkNewAcc;
     private UtilizatorService utilizatorService;
     private Stage stage;
     private Main main;
@@ -34,7 +29,7 @@ public class LoginController {
         this.stage = stage;
     }
 
-    public void handleLogin(ActionEvent actionEvent) throws SQLException {
+    public void handleLogin() throws SQLException {
         if (textUsername.getText().isEmpty()) {
             MessageAlert.showErrorMessage(null, "Introdu un username");
         } else if (textPassword.getText().isEmpty()) {
@@ -55,7 +50,7 @@ public class LoginController {
     }
 
 
-    public void handleNewAcc(ActionEvent actionEvent) {
+    public void handleNewAcc() {
         showCreateAccDialog();
     }
 
@@ -64,7 +59,7 @@ public class LoginController {
             FXMLLoader loader1 = new FXMLLoader();
             loader1.setLocation(getClass().getResource("register-view.fxml"));
 
-            AnchorPane root1 = (AnchorPane) loader1.load();
+            AnchorPane root1 = loader1.load();
 
             Stage dialogStage = new Stage();
             dialogStage.setTitle("Create an Account");

@@ -65,8 +65,7 @@ public class RequestFriendController implements Observer {
                 // Actualizează modelul cu utilizatorii filtrați
                 model.setAll(filteredUsers);
             } catch (SQLException e) {
-                // Gestionează excepțiile
-                e.printStackTrace();
+                MessageAlert.showErrorMessage(null, "Eroare: " + e.getMessage());
             }
         });
     }
@@ -93,13 +92,16 @@ public class RequestFriendController implements Observer {
             else if(prietenieService.verifyPrietenie(utilizator.getId(), user.getId())){
                 iterator.remove();
             }
+            else if(cerereService.verifyCerere(utilizator.getId(), user.getId())){
+                iterator.remove();
+            }
         }
 
         model.setAll(all);
     }
 
 
-    public void handleAdd() throws SQLException {
+    public void handleAdd() {
         Utilizator user = tableViewUser.getSelectionModel().getSelectedItem();
         if (user != null) {
             CererePrietenie cererePrietenie = new CererePrietenie();

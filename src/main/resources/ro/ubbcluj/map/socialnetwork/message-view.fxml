@@ -3,13 +3,13 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<AnchorPane prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ro.ubbcluj.map.socialnetwork.MessageController">
+<AnchorPane prefWidth="600.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ro.ubbcluj.map.socialnetwork.MessageController">
    <children>
-      <SplitPane dividerPositions="0.5369127516778524" layoutY="-7.0" orientation="VERTICAL" prefHeight="400.0" prefWidth="600.0">
+      <SplitPane dividerPositions="0.5041946308724832" layoutY="-7.0" orientation="VERTICAL" prefHeight="400.0" prefWidth="600.0">
         <items>
-          <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="100.0" prefWidth="160.0">
+          <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="194.0" prefWidth="597.0">
                <children>
-                  <TableView fx:id="tableViewMessages" layoutY="6.0" prefHeight="242.0" prefWidth="597.0">
+                  <TableView fx:id="tableViewMessages" layoutY="-1.0" prefHeight="210.0" prefWidth="597.0" AnchorPane.bottomAnchor="1.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="5.0">
                     <columns>
                       <TableColumn fx:id="fromColumn" prefWidth="120.00000011920929" text="From" />
                       <TableColumn fx:id="toColumn" prefWidth="117.33334350585938" text="To" />
@@ -18,10 +18,10 @@
                     </columns>
                   </TableView>
                </children></AnchorPane>
-          <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="200.0" prefWidth="597.0">
+          <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="132.0" prefWidth="597.0">
                <children>
-                  <TextArea fx:id="msgArea" layoutX="40.0" layoutY="30.0" prefHeight="97.0" prefWidth="505.0" />
-                <Button fx:id="bttnSend" onAction="#handleSend" layoutX="401.0" layoutY="141.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="144.0" text="Send" />
+                  <TextArea fx:id="msgArea" layoutX="40.0" layoutY="13.0" prefHeight="25.0" prefWidth="505.0" />
+                <Button fx:id="bttnSend" layoutX="401.0" layoutY="65.0" mnemonicParsing="false" onAction="#handleSend" prefHeight="25.0" prefWidth="144.0" text="Send" />
                </children></AnchorPane>
         </items>
       </SplitPane>

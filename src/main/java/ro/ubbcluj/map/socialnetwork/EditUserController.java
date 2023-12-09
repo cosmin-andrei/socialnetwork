@@ -2,7 +2,6 @@ package ro.ubbcluj.map.socialnetwork;
 
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
-import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
 import ro.ubbcluj.map.socialnetwork.controller.MessageAlert;
@@ -10,12 +9,6 @@ import ro.ubbcluj.map.socialnetwork.domain.Utilizator;
 import ro.ubbcluj.map.socialnetwork.service.UtilizatorService;
 
 public class EditUserController {
-
-    @FXML
-    private Button buttonSave;
-
-    @FXML
-    private Button buttonCancel;
 
     private UtilizatorService utilizatorService;
     private Stage stage;

@@ -5,7 +5,6 @@ import ro.ubbcluj.map.socialnetwork.domain.validators.ValidationException;
 import ro.ubbcluj.map.socialnetwork.observer.Observable;
 import ro.ubbcluj.map.socialnetwork.observer.Observer;
 import ro.ubbcluj.map.socialnetwork.repository.Repository;
-import ro.ubbcluj.map.socialnetwork.repository.UserDBRepository;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -28,8 +27,16 @@ public class UtilizatorService implements Observable {
                 throw new ValidationException("Exista un utilizator cu acest username");
 
         });
-        int k = ((UserDBRepository) repo).countUsers();
-        utilizator.setId((long) (k+1));
+
+        List<Utilizator> all = getAll();
+        long id;
+        if (all.isEmpty()) {
+            id = 1;
+        } else {
+            id = all.get(0).getId() + 1;
+        }
+
+        utilizator.setId(id);
         repo.save(utilizator);
         notifyAllObservers();
 

@@ -47,6 +47,11 @@ public class CerereService implements Observable {
         notifyAllObservers();
     }
 
+    public boolean verifyCerere(Long id1, Long id2) throws SQLException {
+        return repoCerere.findOne(new Tuple<>(id1, id2)).isPresent() ||
+                repoCerere.findOne(new Tuple<>(id2, id1)).isPresent();
+    }
+
     public void respondRequest(Tuple<Long, Long> id, String raspunsCerere) throws SQLException {
         Optional<CererePrietenie> cererePrietenie = repoCerere.findOne(id);
         if (cererePrietenie.isEmpty()) {
@@ -65,17 +70,15 @@ public class CerereService implements Observable {
         notifyAllObservers();
     }
 
-    public List<Utilizator> pendingRequests(Long idUser) throws SQLException {
+    public List<Utilizator> pendingRequests(Long idUser) {
         List<Utilizator> rez = new ArrayList<>();
 
         repoUtilizatori.findOne(idUser).ifPresentOrElse(
-                user -> {
-                    repoCerere.findAll().forEach(cerere -> {
-                        if (Objects.equals(cerere.getId().getRight(), idUser)) {
-                            repoUtilizatori.findOne(cerere.getId().getLeft()).ifPresent(rez::add);
-                        }
-                    });
-                },
+                user -> repoCerere.findAll().forEach(cerere -> {
+                    if (Objects.equals(cerere.getId().getRight(), idUser)) {
+                        repoUtilizatori.findOne(cerere.getId().getLeft()).ifPresent(rez::add);
+                    }
+                }),
                 () -> {
                     throw new ValidationException("Userul nu exista");
                 }

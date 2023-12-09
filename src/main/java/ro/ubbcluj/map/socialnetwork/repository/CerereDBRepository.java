@@ -118,7 +118,7 @@ public class CerereDBRepository implements Repository<Tuple<Long, Long>, CerereP
 
     @Override
     public Optional<CererePrietenie> delete(Tuple<Long, Long> longLongTuple) {
-        Optional<CererePrietenie> cererePrietenie = null;
+        Optional<CererePrietenie> cererePrietenie;
         try {
             cererePrietenie = findOne(longLongTuple);
         } catch (SQLException e) {

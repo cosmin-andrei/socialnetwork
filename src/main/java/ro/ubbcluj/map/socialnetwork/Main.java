@@ -4,6 +4,7 @@ import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import ro.ubbcluj.map.socialnetwork.domain.Utilizator;
 import ro.ubbcluj.map.socialnetwork.domain.validators.CerereValidator;
@@ -34,7 +35,7 @@ public class Main extends Application {
     CerereService cerereService = new CerereService(prietenieDBRepository, userDBRepository, cerereDBRepository);
     PrietenieService prietenieService = new PrietenieService(repoUtilizator, prietenieDBRepository);
     MessageDBRepository messageDBRepository = new MessageDBRepository(new MessageValidator(), url, username, password);
-    MessageService messageService = new MessageService(messageDBRepository, prietenieDBRepository);
+    MessageService messageService = new MessageService(messageDBRepository, prietenieDBRepository, userDBRepository);
 
     public static void main(String[] args) {
         launch(args);
@@ -44,20 +45,20 @@ public class Main extends Application {
         FXMLLoader loginLoader = new FXMLLoader();
         loginLoader.setLocation(getClass().getResource("login-view.fxml"));
 
-        AnchorPane loginPane = loginLoader.load();
+        VBox loginVBox = loginLoader.load();  // Schimbați aici VBox în loc de AnchorPane
         LoginController loginController = loginLoader.getController();
         loginController.setMain(this);
 
-        Scene scene = new Scene(loginPane);
+        Scene scene = new Scene(loginVBox);  // Și aici
 
         primaryStage.setTitle("Retea de socializare");
         primaryStage.setScene(scene);
-
 
         loginController.setService(serv, primaryStage);
 
         primaryStage.show();
     }
+
 
 
     public void openUserStage(Utilizator user) throws Exception {

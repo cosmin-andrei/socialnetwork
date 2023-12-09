@@ -8,14 +8,13 @@ import java.sql.*;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
-import java.util.UUID;
 
 public class UserDBRepository implements Repository<Long, Utilizator> {
 
     private final UtilizatorValidator validator;
-    private String url;
-    private String username;
-    private String password;
+    private final String url;
+    private final String username;
+    private final String password;
 
     public UserDBRepository(UtilizatorValidator validator, String url, String username, String password) {
         this.validator = validator;
@@ -28,7 +27,7 @@ public class UserDBRepository implements Repository<Long, Utilizator> {
     public Optional<Utilizator> findOne(Long longID) {
         try(Connection connection = DriverManager.getConnection(url, username, password);
             PreparedStatement statement = connection.prepareStatement("select * from users " +
-                    "where id = ?");
+                    "where id = ?")
 
         ) {
             statement.setInt(1, Math.toIntExact(longID));
@@ -50,7 +49,7 @@ public class UserDBRepository implements Repository<Long, Utilizator> {
     }
 
     @Override
-    public Iterable findAll() throws SQLException {
+    public Iterable<Utilizator> findAll() {
         Set<Utilizator> users = new HashSet<>();
 
         try (Connection connection = DriverManager.getConnection(url, username, password);
@@ -143,19 +142,6 @@ public class UserDBRepository implements Repository<Long, Utilizator> {
 
 
         return Optional.empty();
-    }
-
-    public int countUsers() throws SQLException {
-        try (Connection connection = DriverManager.getConnection(url, username, password);
-             PreparedStatement statement = connection.prepareStatement("SELECT COUNT(*) FROM users");
-             ResultSet resultSet = statement.executeQuery()) {
-
-            if (resultSet.next()) {
-                return resultSet.getInt(1);
-            } else {
-                throw new SQLException("Nu s-a putut obține numărul de înregistrări.");
-            }
-        }
     }
 
 }

@@ -1,15 +1,18 @@
 package ro.ubbcluj.map.socialnetwork;
 
+import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.scene.control.*;
+import javafx.scene.control.ContextMenu;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
+import javafx.scene.control.TextArea;
 import javafx.scene.control.cell.PropertyValueFactory;
-import javafx.stage.Stage;
+import javafx.scene.input.ContextMenuEvent;
 import ro.ubbcluj.map.socialnetwork.controller.MessageAlert;
 import ro.ubbcluj.map.socialnetwork.domain.Message;
-import ro.ubbcluj.map.socialnetwork.domain.Tuple;
 import ro.ubbcluj.map.socialnetwork.domain.Utilizator;
 import ro.ubbcluj.map.socialnetwork.observer.Observer;
 import ro.ubbcluj.map.socialnetwork.service.MessageService;
@@ -50,9 +53,9 @@ public class MessageController implements Observer {
     }
 
     public void initialize() {
-        fromColumn.setCellValueFactory(new PropertyValueFactory<>("from"));
-        toColumn.setCellValueFactory(new PropertyValueFactory<>("to"));
-        messagesColumn.setCellValueFactory(new PropertyValueFactory<>("messages"));
+        fromColumn.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getSender().getFirstName()));
+        toColumn.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getReceiver().getFirstName()));
+        messagesColumn.setCellValueFactory(new PropertyValueFactory<>("text"));
         dateColumn.setCellValueFactory(new PropertyValueFactory<>("date"));
         tableViewMessages.setItems(model);
     }
@@ -63,23 +66,30 @@ public class MessageController implements Observer {
     }
 
     public void handleSend() {
+        Message selectedMessage = tableViewMessages.getSelectionModel().getSelectedItem();
         String msgAreaText = msgArea.getText();
-        System.out.println(msgAreaText);
-        try{
-            Message message = new Message(fromUser.getId(), toUser.getId(), msgAreaText);
-            message.setId(new Tuple<>(fromUser.getId(), toUser.getId()));
+        try {
+            Message message = new Message(fromUser, toUser, msgAreaText);
+            if (selectedMessage != null) {
+                message.setIdReply(selectedMessage.getId());
+                String replyInfo = "Reply la: " + selectedMessage.getText() + "\n";
+                msgAreaText = replyInfo + msgAreaText;
+            }
+            message.setText(msgAreaText);
             messageService.addMessage(message);
             initModel();
-        }catch (Exception e){
+            tableViewMessages.getSelectionModel().clearSelection();
+            msgArea.clear();
+        } catch (Exception e) {
             MessageAlert.showErrorMessage(null, "Eroare: " + e.getMessage());
         }
     }
+
 
     @Override
     public void update() throws SQLException {
         initModel();
     }
-
 
 
 }

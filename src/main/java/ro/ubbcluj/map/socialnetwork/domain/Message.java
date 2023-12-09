@@ -2,17 +2,30 @@ package ro.ubbcluj.map.socialnetwork.domain;
 
 import java.time.LocalDateTime;
 
-public class Message extends Entity<Tuple<Long,Long>> {
+public class Message extends Entity<Long> {
 
     private String text;
-    private Long idSender;
-    private Long idReceiver;
+    private Utilizator sender;
+    private Utilizator receiver;
+    private Long idReply;
     private LocalDateTime date;
 
-    public Message(Long idSender, Long idReceiver, String text) {
-        this.idSender = idSender;
-        this.idReceiver = idReceiver;
+    public Message(Utilizator sender, Utilizator receiver, String text) {
+        this.sender = sender;
+        this.receiver = receiver;
+        this.text = text;
         this.date = LocalDateTime.now();
+    }
+
+    public long getIdReply() {
+        if(idReply!=null)
+            return idReply;
+        else
+            return 0;
+    }
+
+    public void setIdReply(Long idReply) {
+        this.idReply = idReply;
     }
 
     public String getText() {
@@ -23,20 +36,20 @@ public class Message extends Entity<Tuple<Long,Long>> {
         this.text = text;
     }
 
-    public Long getIdSender() {
-        return idSender;
+    public Utilizator getSender() {
+        return sender;
     }
 
-    public void setIdSender(Long idSender) {
-        this.idSender = idSender;
+    public void setSender(Utilizator sender) {
+        this.sender = sender;
     }
 
-    public Long getIdReceiver() {
-        return idReceiver;
+    public Utilizator getReceiver() {
+        return receiver;
     }
 
-    public void setIdReceiver(Long idReceiver) {
-        this.idReceiver = idReceiver;
+    public void setReceiver(Utilizator receiver) {
+        this.receiver = receiver;
     }
 
     public LocalDateTime getDate() {

@@ -2,11 +2,11 @@ package ro.ubbcluj.map.socialnetwork;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
+import javafx.scene.control.SelectionMode;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
@@ -24,14 +24,15 @@ import ro.ubbcluj.map.socialnetwork.service.UtilizatorService;
 
 import java.sql.SQLException;
 import java.util.Collection;
+import java.util.List;
 
 public class UserController implements Observer {
 
 
     @FXML
-    private TableView tableViewFriends;
+    private TableView<Utilizator> tableViewFriends;
     @FXML
-    private TableView tableViewRequests;
+    private TableView<Utilizator> tableViewRequests;
     UtilizatorService userService;
     CerereService cerereService;
     PrietenieService prietenieService;
@@ -73,7 +74,7 @@ public class UserController implements Observer {
         initModelRequests();
     }
 
-    public void handleDelete(ActionEvent actionEvent) {
+    public void handleDelete() {
         try {
             userService.stergeUtilizator(utilizator.getUsername());
             MessageAlert.showMessage(null, Alert.AlertType.INFORMATION, "Sterge utilizator", "Utilizator sters cu succes!");
@@ -83,7 +84,7 @@ public class UserController implements Observer {
         }
     }
 
-    public void handleUpdate(ActionEvent actionEvent) {
+    public void handleUpdate() {
         showUserEditDialog();
     }
 
@@ -112,8 +113,8 @@ public class UserController implements Observer {
         }
     }
 
-    public void handleAcceptRequest(ActionEvent actionEvent) {
-        Utilizator user = (Utilizator) tableViewRequests.getSelectionModel().getSelectedItem();
+    public void handleAcceptRequest() {
+        Utilizator user = tableViewRequests.getSelectionModel().getSelectedItem();
         if (user != null) {
             try {
                 cerereService.respondRequest(new Tuple<>(Long.valueOf(user.getId().toString()), utilizator.getId()), "APPROVED");
@@ -127,7 +128,7 @@ public class UserController implements Observer {
     }
 
 
-    public void handleAddFriend(ActionEvent actionEvent) {
+    public void handleAddFriend() {
         showRequestFriendshipDialog();
     }
 
@@ -137,7 +138,7 @@ public class UserController implements Observer {
             FXMLLoader loader1 = new FXMLLoader();
             loader1.setLocation(getClass().getResource("request-friendship.fxml"));
 
-            AnchorPane root1 = (AnchorPane) loader1.load();
+            AnchorPane root1 = loader1.load();
 
             Stage dialogStage = new Stage();
             dialogStage.setTitle("Adauga prieten");
@@ -156,9 +157,13 @@ public class UserController implements Observer {
         }
     }
 
-    public void handleChat(ActionEvent actionEvent) throws Exception {
-        Utilizator user = (Utilizator) tableViewFriends.getSelectionModel().getSelectedItem();
-        showChatDialog(user);
+    public void handleChat() throws Exception {
+        Utilizator user = tableViewFriends.getSelectionModel().getSelectedItem();
+        if(user!=null)
+            showChatDialog(user);
+        else{
+            MessageAlert.showErrorMessage(null, "Selecteaza un user.");
+        }
     }
 
     private void showChatDialog(Utilizator user) throws Exception {
@@ -166,7 +171,7 @@ public class UserController implements Observer {
             FXMLLoader loader1 = new FXMLLoader();
             loader1.setLocation(getClass().getResource("message-view.fxml"));
 
-            AnchorPane root1 = (AnchorPane) loader1.load();
+            AnchorPane root1 = loader1.load();
 
             Stage dialogStage = new Stage();
             dialogStage.setTitle("Chat");
@@ -186,9 +191,9 @@ public class UserController implements Observer {
         }
     }
 
-    public void handleRejectRequest(ActionEvent actionEvent) {
-        Utilizator user = (Utilizator) tableViewRequests.getSelectionModel().getSelectedItem();
-        if (utilizator != null) {
+    public void handleRejectRequest() {
+        Utilizator user = tableViewRequests.getSelectionModel().getSelectedItem();
+        if (user != null) {
             try {
                 cerereService.respondRequest(new Tuple<>(Long.valueOf(user.getId().toString()), utilizator.getId()), "");
                 MessageAlert.showMessage(null, Alert.AlertType.INFORMATION, "Refuza cererea", "Cererea a fost refuzata!");
@@ -202,8 +207,43 @@ public class UserController implements Observer {
         }
     }
 
+    public void handleChannel() throws Exception {
+        List<Utilizator> selectedUsers = tableViewFriends.getSelectionModel().getSelectedItems();
+        if(selectedUsers.size()<2){
+            MessageAlert.showErrorMessage(null, "Selecteaza minim 2 useri.");
+        } else {
+            showChannelDialog(selectedUsers);
+        }
+
+    }
+
+    private void showChannelDialog(List<Utilizator> selectedUsers) throws Exception {
+        try {
+            FXMLLoader loader1 = new FXMLLoader();
+            loader1.setLocation(getClass().getResource("channel-view.fxml"));
+
+            AnchorPane root1 = loader1.load();
+
+            Stage dialogStage = new Stage();
+            dialogStage.setTitle("Difuzare mesaj");
+            dialogStage.initModality(Modality.WINDOW_MODAL);
+            dialogStage.setResizable(true);
+            Scene scene = new Scene(root1,600,300);
+            dialogStage.setScene(scene);
+
+            ChannelController channelController = loader1.getController();
+            channelController.setService(messageService, dialogStage, utilizator, selectedUsers);
+
+            dialogStage.show();
+
+        } catch (Exception e){
+            throw new Exception(e);
+        }
+    }
+
     @FXML
     public void initializeFriends() {
+        tableViewFriends.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
         PrenumeFriendColumn.setCellValueFactory(new PropertyValueFactory<>("firstName"));
         NumeFriendColumn.setCellValueFactory(new PropertyValueFactory<>("lastName"));
         tableViewFriends.setItems(modelFriends);
@@ -225,7 +265,7 @@ public class UserController implements Observer {
     }
 
 
-    private void initModelRequests() throws SQLException {
+    private void initModelRequests() {
         Collection<Utilizator> requests = cerereService.pendingRequests(utilizator.getId());
         modelRequests.setAll(requests);
         tableViewRequests.setItems(modelRequests);
@@ -235,5 +275,6 @@ public class UserController implements Observer {
     public void update() throws SQLException {
         initModelRequests();
         initModelFriends();
+
     }
 }

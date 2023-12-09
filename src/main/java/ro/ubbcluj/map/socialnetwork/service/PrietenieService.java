@@ -209,8 +209,6 @@ public class PrietenieService implements Observable {
     public boolean verifyPrietenie(Long id, Long id1) throws SQLException {
         Optional<Prietenie> prietenie = repoPrietenie.findOne(new Tuple<>(id,id1));
         Optional<Prietenie> prietenie1 = repoPrietenie.findOne(new Tuple<>(id1, id));
-        if(prietenie.isPresent() || prietenie1.isPresent())
-            return true;
-        return false;
+        return prietenie.isPresent() || prietenie1.isPresent();
     }
 }
