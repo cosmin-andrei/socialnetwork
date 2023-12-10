@@ -50,12 +50,6 @@ public class MessageService implements Observable {
 
     }
 
-//    public void addReply(Long id, Message message)
-//    {
-//        message.getReply().add(id);
-//        repo.update(message);
-//    }
-
     public List<Message> conversation(Long id1, Long id2) {
         List<Message> allMessages = (List<Message>) getAll();
         List<Message> conversationMessages = new ArrayList<>();
@@ -65,6 +59,10 @@ public class MessageService implements Observable {
                 message.setSender(userDBRepository.findOne(id1).orElseThrow());
                 message.setReceiver(userDBRepository.findOne(id2).orElseThrow());
                 conversationMessages.add(message);
+            } else if (isPartOfConversation(message, id2, id1)) {
+                message.setSender(userDBRepository.findOne(id2).orElseThrow());
+                message.setReceiver(userDBRepository.findOne(id1).orElseThrow());
+                conversationMessages.add(message);
             }
         }
 
@@ -72,8 +70,7 @@ public class MessageService implements Observable {
     }
 
     private boolean isPartOfConversation(Message message, Long id1, Long id2) {
-        return (message.getSender().getId().equals(id1) && message.getReceiver().getId().equals(id2)) ||
-                (message.getSender().getId().equals(id2) && message.getReceiver().getId().equals(id1));
+        return (message.getSender().getId().equals(id1) && message.getReceiver().getId().equals(id2));
     }
 
 
