@@ -12,21 +12,22 @@ import java.util.Set;
 public class PrietenieDBRepository implements Repository<Tuple<Long, Long>, Prietenie> {
 
     private final PrietenieValidator validator;
-    private final String url;
-    private final String username;
-    private final String password;
+    private Connection connection;
 
     public PrietenieDBRepository(PrietenieValidator validator, String url, String username, String password) {
         this.validator = validator;
-        this.url = url;
-        this.username = username;
-        this.password = password;
+        try {
+            connection = DriverManager.getConnection(url, username, password);
+        }
+        catch (SQLException e)
+        {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
     public Optional<Prietenie> findOne(Tuple<Long, Long> longLongTuple) {
-        try (Connection connection = DriverManager.getConnection(url, username, password);
-             PreparedStatement statement = connection.prepareStatement("SELECT * FROM \"friends\" WHERE id1 = ? AND id2 = ?;")) {
+        try (PreparedStatement statement = connection.prepareStatement("SELECT * FROM \"friends\" WHERE id1 = ? AND id2 = ?;")) {
             statement.setLong(1, longLongTuple.getLeft());
             statement.setLong(2, longLongTuple.getRight());
             try (ResultSet resultSet = statement.executeQuery()) {
@@ -53,8 +54,7 @@ public class PrietenieDBRepository implements Repository<Tuple<Long, Long>, Prie
     public Iterable<Prietenie> findAll() {
         Set<Prietenie> prietenii = new HashSet<>();
 
-        try (Connection connection = DriverManager.getConnection(url, username, password);
-             PreparedStatement statement = connection.prepareStatement("SELECT * FROM \"friends\";");
+        try (PreparedStatement statement = connection.prepareStatement("SELECT * FROM \"friends\";");
              ResultSet resultSet = statement.executeQuery()) {
 
             while (resultSet.next()) {
@@ -84,8 +84,7 @@ public class PrietenieDBRepository implements Repository<Tuple<Long, Long>, Prie
 
         validator.validate(entity);
 
-        try (Connection connection = DriverManager.getConnection(url, username, password);
-             PreparedStatement statement = connection.prepareStatement("INSERT INTO friends (id1, id2, data) VALUES (?, ?, ?)")) {
+        try (PreparedStatement statement = connection.prepareStatement("INSERT INTO friends (id1, id2, data) VALUES (?, ?, ?)")) {
 
             statement.setLong(1, entity.getId().getLeft());
             statement.setLong(2, entity.getId().getRight());
@@ -105,8 +104,7 @@ public class PrietenieDBRepository implements Repository<Tuple<Long, Long>, Prie
         Optional<Prietenie> prietenie = findOne(longLongTuple);
 
         if (prietenie.isPresent()) {
-            try (Connection connection = DriverManager.getConnection(url, username, password);
-                 PreparedStatement statement = connection.prepareStatement("DELETE FROM \"friends\" WHERE id1 = ? AND id2 = ?;")) {
+            try (PreparedStatement statement = connection.prepareStatement("DELETE FROM \"friends\" WHERE id1 = ? AND id2 = ?;")) {
 
                 statement.setLong(1, longLongTuple.getLeft());
                 statement.setLong(2, longLongTuple.getRight());

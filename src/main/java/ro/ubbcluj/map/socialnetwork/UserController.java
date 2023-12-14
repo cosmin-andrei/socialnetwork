@@ -275,6 +275,5 @@ public class UserController implements Observer {
     public void update() throws SQLException {
         initModelRequests();
         initModelFriends();
-
     }
 }

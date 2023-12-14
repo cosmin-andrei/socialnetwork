@@ -39,7 +39,7 @@ public class LoginController {
                 try {
                     Utilizator user = utilizatorService.findUser(textUsername.getText());
                     main.openUserStage(user);
-                    stage.close();
+//                    stage.close();
                 } catch (Exception e){
                     MessageAlert.showErrorMessage(null, "Eroare: " + e.getMessage());
                 }

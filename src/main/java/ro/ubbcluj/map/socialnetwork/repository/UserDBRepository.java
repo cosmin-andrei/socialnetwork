@@ -12,21 +12,23 @@ import java.util.Set;
 public class UserDBRepository implements Repository<Long, Utilizator> {
 
     private final UtilizatorValidator validator;
-    private final String url;
-    private final String username;
-    private final String password;
+    private Connection connection;
 
     public UserDBRepository(UtilizatorValidator validator, String url, String username, String password) {
         this.validator = validator;
-        this.url = url;
-        this.username = username;
-        this.password = password;
+        try {
+            connection = DriverManager.getConnection(url, username, password);
+        }
+        catch (SQLException e)
+        {
+            throw new RuntimeException(e);
+        }
+
     }
 
     @Override
     public Optional<Utilizator> findOne(Long longID) {
-        try(Connection connection = DriverManager.getConnection(url, username, password);
-            PreparedStatement statement = connection.prepareStatement("select * from users " +
+        try(PreparedStatement statement = connection.prepareStatement("select * from users " +
                     "where id = ?")
 
         ) {
@@ -52,8 +54,7 @@ public class UserDBRepository implements Repository<Long, Utilizator> {
     public Iterable<Utilizator> findAll() {
         Set<Utilizator> users = new HashSet<>();
 
-        try (Connection connection = DriverManager.getConnection(url, username, password);
-             PreparedStatement statement = connection.prepareStatement("select * from users");
+        try (PreparedStatement statement = connection.prepareStatement("select * from users");
              ResultSet resultSet = statement.executeQuery()
         ) {
 
@@ -84,8 +85,7 @@ public class UserDBRepository implements Repository<Long, Utilizator> {
 
         validator.validate(utilizator);
 
-        try (Connection connection = DriverManager.getConnection(url, username, password);
-             PreparedStatement statement = connection.prepareStatement(
+        try (PreparedStatement statement = connection.prepareStatement(
                      "INSERT INTO users(id, username, first_name, last_name, password) VALUES (?, ?, ?, ?, ?)"
              )) {
             statement.setLong(1, utilizator.getId());
@@ -108,7 +108,6 @@ public class UserDBRepository implements Repository<Long, Utilizator> {
             throw new IllegalArgumentException("ID inexistent");
 
         try {
-            Connection connection = DriverManager.getConnection(url, username, password);
             Statement statement = connection.createStatement();
             statement.executeUpdate("DELETE FROM users WHERE id =" + aLong);
 
@@ -127,8 +126,7 @@ public class UserDBRepository implements Repository<Long, Utilizator> {
 
         validator.validate(utilizator);
 
-        try (Connection connection = DriverManager.getConnection(url, username, password);
-             PreparedStatement statement = connection.prepareStatement(
+        try (PreparedStatement statement = connection.prepareStatement(
                      "UPDATE users SET first_name = ?, last_name = ? WHERE id = ?"
              )) {
             statement.setString(1, utilizator.getFirstName());

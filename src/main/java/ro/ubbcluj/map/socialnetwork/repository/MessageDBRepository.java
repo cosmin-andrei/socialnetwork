@@ -12,22 +12,24 @@ import java.util.Optional;
 public class MessageDBRepository implements Repository<Long, Message> {
 
     private final MessageValidator validator;
-    private final String url;
-    private final String username;
-    private final String password;
+
+    private Connection connection;
 
     public MessageDBRepository(MessageValidator validator, String url, String username, String password) {
         this.validator = validator;
-        this.url = url;
-        this.username = username;
-        this.password = password;
+        try {
+            connection = DriverManager.getConnection(url, username, password);
+        }
+        catch (SQLException e)
+        {
+            throw new RuntimeException(e);
+        }
     }
 
 
     @Override
     public Optional<Message> findOne(Long id) {
-        try (Connection connection = DriverManager.getConnection(url, username, password);
-             PreparedStatement statement = connection.prepareStatement("SELECT * FROM messages WHERE id=?")) {
+        try (PreparedStatement statement = connection.prepareStatement("SELECT * FROM messages WHERE id=?")) {
 
             try (ResultSet resultSet = statement.executeQuery()) {
                 if (resultSet.next()) {
@@ -63,8 +65,7 @@ public class MessageDBRepository implements Repository<Long, Message> {
     public Iterable<Message> findAll() {
         List<Message> messages = new ArrayList<>();
 
-        try (Connection connection = DriverManager.getConnection(url, username, password);
-             Statement statement = connection.createStatement()) {
+        try (Statement statement = connection.createStatement()) {
 
             try (ResultSet resultSet = statement.executeQuery("SELECT * FROM messages")) {
 
@@ -107,8 +108,7 @@ public class MessageDBRepository implements Repository<Long, Message> {
 
         validator.validate(entity);
 
-        try (Connection connection = DriverManager.getConnection(url, username, password);
-             PreparedStatement statement = connection.prepareStatement("insert into \"messages\"(sender, receiver, text, date, id, idreply) values (?,?,?,?,?,?)")) {
+        try (PreparedStatement statement = connection.prepareStatement("insert into \"messages\"(sender, receiver, text, date, id, idreply) values (?,?,?,?,?,?)")) {
 
             statement.setLong(1, entity.getSender().getId());
             statement.setLong(2, entity.getReceiver().getId());

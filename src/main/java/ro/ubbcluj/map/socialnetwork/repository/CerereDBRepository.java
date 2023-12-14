@@ -14,20 +14,24 @@ import java.util.Set;
 public class CerereDBRepository implements Repository<Tuple<Long, Long>, CererePrietenie> {
 
     private final CerereValidator validator;
-    private final String url;
-    private final String username;
-    private final String password;
+
+    private Connection connection;
 
     public CerereDBRepository(CerereValidator validator, String url, String username, String password) {
         this.validator = validator;
-        this.url = url;
-        this.username = username;
-        this.password = password;
+
+        try {
+            connection = DriverManager.getConnection(url, username, password);
+        }
+        catch (SQLException e)
+        {
+            throw new RuntimeException(e);
+        }
     }
 
+
     public Optional<CererePrietenie> findOne(Tuple<Long, Long> longLongTuple) throws SQLException {
-        try (Connection connection = DriverManager.getConnection(url, username, password);
-             PreparedStatement statement = connection.prepareStatement("SELECT * FROM \"requests\" WHERE id1 = ? AND id2 = ?;")) {
+        try (PreparedStatement statement = connection.prepareStatement("SELECT * FROM \"requests\" WHERE id1 = ? AND id2 = ?;")) {
             statement.setLong(1, longLongTuple.getLeft());
             statement.setLong(2, longLongTuple.getRight());
             try (ResultSet resultSet = statement.executeQuery()) {
@@ -59,8 +63,7 @@ public class CerereDBRepository implements Repository<Tuple<Long, Long>, CerereP
     public Iterable<CererePrietenie> findAll() {
         Set<CererePrietenie> requests = new HashSet<>();
 
-        try (Connection connection = DriverManager.getConnection(url, username, password);
-             PreparedStatement statement = connection.prepareStatement("SELECT * FROM \"requests\";");
+        try (PreparedStatement statement = connection.prepareStatement("SELECT * FROM \"requests\";");
              ResultSet resultSet = statement.executeQuery()
         ) {
 
@@ -99,8 +102,7 @@ public class CerereDBRepository implements Repository<Tuple<Long, Long>, CerereP
 
         validator.validate(entity);
 
-        try (Connection connection = DriverManager.getConnection(url, username, password);
-             PreparedStatement statement = connection.prepareStatement("insert into \"requests\"(id1,id2,status,date) values (?,?,?,?)")) {
+        try (PreparedStatement statement = connection.prepareStatement("insert into \"requests\"(id1,id2,status,date) values (?,?,?,?)")) {
 
             statement.setLong(1, entity.getId().getLeft());
             statement.setLong(2, entity.getId().getRight());
@@ -126,8 +128,7 @@ public class CerereDBRepository implements Repository<Tuple<Long, Long>, CerereP
         }
 
         if (cererePrietenie.isPresent()) {
-            try (Connection connection = DriverManager.getConnection(url, username, password);
-                 PreparedStatement statement = connection.prepareStatement("DELETE FROM \"requests\" WHERE id1 = ? AND id2 = ?;")) {
+            try (PreparedStatement statement = connection.prepareStatement("DELETE FROM \"requests\" WHERE id1 = ? AND id2 = ?;")) {
 
                 statement.setLong(1, longLongTuple.getLeft());
                 statement.setLong(2, longLongTuple.getRight());
@@ -156,8 +157,7 @@ public class CerereDBRepository implements Repository<Tuple<Long, Long>, CerereP
 
         validator.validate(entity);
 
-        try (Connection connection = DriverManager.getConnection(url, username, password);
-             PreparedStatement statement = connection.prepareStatement(
+        try (PreparedStatement statement = connection.prepareStatement(
                      "UPDATE \"requests\" SET status = ?, date = ? WHERE id1 = ? AND id2 = ?"
              )) {
 
