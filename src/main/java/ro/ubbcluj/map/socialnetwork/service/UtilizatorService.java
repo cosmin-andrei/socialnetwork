@@ -4,20 +4,24 @@ import ro.ubbcluj.map.socialnetwork.domain.Utilizator;
 import ro.ubbcluj.map.socialnetwork.domain.validators.ValidationException;
 import ro.ubbcluj.map.socialnetwork.observer.Observable;
 import ro.ubbcluj.map.socialnetwork.observer.Observer;
+import ro.ubbcluj.map.socialnetwork.repository.PagingRepository.UserDBPagingRepository;
 import ro.ubbcluj.map.socialnetwork.repository.Repository;
+import ro.ubbcluj.map.socialnetwork.repository.UserDBRepository;
+import ro.ubbcluj.map.socialnetwork.repository.paging.Page;
+import ro.ubbcluj.map.socialnetwork.repository.paging.Pageable;
+import ro.ubbcluj.map.socialnetwork.repository.paging.PageableImplementation;
 
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 
 public class UtilizatorService implements Observable {
 
-    Repository<Long, Utilizator> repo;
+    UserDBPagingRepository repo;
+    UserDBRepository repoSimplu;
     List<Observer> observers = new ArrayList<>();
 
-    public UtilizatorService(Repository<Long, Utilizator> repo) {
+    public UtilizatorService(UserDBPagingRepository repo, UserDBRepository repoSimplu) {
+        this.repoSimplu = repoSimplu;
         this.repo = repo;
     }
 
@@ -28,13 +32,8 @@ public class UtilizatorService implements Observable {
 
         });
 
-        List<Utilizator> all = getAll();
-        long id;
-        if (all.isEmpty()) {
-            id = 1;
-        } else {
-            id = all.get(0).getId() + 1;
-        }
+        List<Utilizator> all = (List<Utilizator>) repoSimplu.findAll();
+        long id = all.isEmpty() ? 1 : all.get(0).getId() + 1;
 
         utilizator.setId(id);
         repo.save(utilizator);
@@ -78,14 +77,6 @@ public class UtilizatorService implements Observable {
         return null;
     }
 
-    public List<Utilizator> getAll() throws SQLException {
-
-        List<Utilizator> rez = new ArrayList<>();
-        repo.findAll().forEach(rez::add);
-        return rez;
-
-    }
-
     @Override
     public void registerObserver(Observer o) {
         observers.add(o);
@@ -112,5 +103,28 @@ public class UtilizatorService implements Observable {
             throw new ValidationException("Utilizatorul nu exista");
         }
     }
+
+
+    //PAGINARE
+
+    private int page;
+    private int size;
+
+    private Pageable pageable;
+
+    public void setPageSize(int size) {
+        this.size = size;
+    }
+
+    public void setPage(int page) {
+        this.page = page;
+    }
+
+    public Set<Utilizator> getAll() {
+        Pageable pageable = new PageableImplementation(this.page, this.size);
+        Page<Utilizator> utilizatorPage = repo.findAll(pageable);
+        return (Set<Utilizator>) utilizatorPage.getContent();
+    }
+
 
 }

@@ -22,8 +22,13 @@ import java.util.Iterator;
 import java.util.Objects;
 
 public class RequestFriendController implements Observer {
+
+    @FXML
+    private Pagination bttnPage;
     @FXML
     private TextField filterUsername;
+    @FXML
+    private TextField filterPage;
     private CerereService cerereService;
     private UtilizatorService userService;
     private final ObservableList<Utilizator> model = FXCollections.observableArrayList();
@@ -68,6 +73,19 @@ public class RequestFriendController implements Observer {
                 MessageAlert.showErrorMessage(null, "Eroare: " + e.getMessage());
             }
         });
+
+        filterPage.textProperty().addListener((observable, oldValue, newValue) -> {
+            try {
+                userService.setPage(1);
+                userService.setPageSize(Integer.parseInt(newValue));
+                initModel();
+            } catch (NumberFormatException e) {
+                MessageAlert.showErrorMessage(null, "Introduceți un număr valid pentru pagină.");
+            } catch (SQLException e) {
+                MessageAlert.showErrorMessage(null, "Eroare: " + e.getMessage());
+            }
+        });
+
     }
 
     public void setRequestService(UtilizatorService userService, CerereService cerereService, PrietenieService prietenieService, Stage stage, Utilizator utilizator) throws SQLException {
@@ -82,7 +100,18 @@ public class RequestFriendController implements Observer {
 
 
     private void initModel() throws SQLException {
-        Collection<Utilizator> all = userService.getAll();
+
+        Collection<Utilizator> all;
+        if (!filterPage.getText().isEmpty()) {
+            userService.setPage(1);
+            userService.setPageSize(Integer.parseInt(filterPage.getText()));
+            all = userService.getUsers();
+        }
+        else {
+            all = userService.getAll();
+        }
+
+
         Iterator<Utilizator> iterator = all.iterator();
         while (iterator.hasNext()) {
             Utilizator user = iterator.next();

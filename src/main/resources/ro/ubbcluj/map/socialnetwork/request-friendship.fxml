@@ -6,28 +6,35 @@
 
 <AnchorPane prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ro.ubbcluj.map.socialnetwork.RequestFriendController">
     <children>
-      <SplitPane dividerPositions="0.4135906040268456" orientation="VERTICAL" prefHeight="400.0" prefWidth="600.0">
+      <SplitPane dividerPositions="0.49916107382550334" orientation="VERTICAL" prefHeight="400.0" prefWidth="600.0">
         <items>
           <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="100.0" prefWidth="160.0">
                <children>
-                  <TableView fx:id="tableViewUser" prefHeight="397.0" prefWidth="600.0">
+                  <TableView fx:id="tableViewUser" prefHeight="144.0" prefWidth="600.0">
                     <columns>
                       <TableColumn fx:id="tableColumnUsername" prefWidth="200.0" text="Username" />
                       <TableColumn fx:id="tableColumnNume" minWidth="0.0" prefWidth="200.0" text="Nume" />
                         <TableColumn fx:id="tableColumnPrenume" prefWidth="200.0" text="Prenume" />
                     </columns>
                   </TableView>
+                  <Pagination fx:id="bttnPage" layoutX="-1.0" layoutY="146.0" prefHeight="49.0" prefWidth="600.0" />
                </children>
             </AnchorPane>
-          <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="163.0" prefWidth="597.0">
+          <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="285.0" prefWidth="597.0">
                <children>
-                  <Button fx:id="buttonAdd" layoutX="243.0" layoutY="89.0" mnemonicParsing="false" onAction="#handleAdd" text="Adauga prieten" />
+                  <Button fx:id="buttonAdd" layoutX="250.0" layoutY="157.0" mnemonicParsing="false" onAction="#handleAdd" text="Adauga prieten" />
                   <Label layoutX="117.0" layoutY="25.0" text="Find by username">
                      <font>
                         <Font name="System Bold Italic" size="12.0" />
                      </font>
                   </Label>
                   <TextField fx:id="filterUsername" layoutX="117.0" layoutY="51.0" prefHeight="25.0" prefWidth="363.0" />
+                  <Label layoutX="117.0" layoutY="97.0" text="Find by restriction">
+                     <font>
+                        <Font name="System Bold Italic" size="12.0" />
+                     </font>
+                  </Label>
+                  <TextField fx:id="filterPage" layoutX="117.0" layoutY="115.0" prefHeight="25.0" prefWidth="363.0" />
                </children>
             </AnchorPane>
         </items>

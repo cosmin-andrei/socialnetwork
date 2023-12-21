@@ -17,7 +17,7 @@
 //import ro.ubbcluj.map.socialnetwork.domain.Utilizator;
 //import ro.ubbcluj.map.socialnetwork.observer.Observer;
 //import ro.ubbcluj.map.socialnetwork.service.CerereService;
-//import ro.ubbcluj.map.socialnetwork.service.MessageService;
+//import ro.ubbcluj.map.socialnetwork.service.ConversationService;
 //import ro.ubbcluj.map.socialnetwork.service.PrietenieService;
 //import ro.ubbcluj.map.socialnetwork.service.UtilizatorService;
 //
@@ -30,7 +30,7 @@
 //    UtilizatorService userService;
 //    CerereService cerereService;
 //    PrietenieService prietenieService;
-//    MessageService messageService;
+//    ConversationService conversationService;
 //    private final ObservableList<Utilizator> model = FXCollections.observableArrayList();
 //    private final ObservableList<Utilizator> modelPrietenie = FXCollections.observableArrayList();
 //
@@ -61,11 +61,11 @@
 //    }
 //
 //
-//    public void setService(UtilizatorService utilizatorService, CerereService cerereService, PrietenieService prietenieService, MessageService messageService) throws SQLException {
+//    public void setService(UtilizatorService utilizatorService, CerereService cerereService, PrietenieService prietenieService, ConversationService conversationService) throws SQLException {
 //        this.cerereService = cerereService;
 //        this.userService = utilizatorService;
 //        this.prietenieService = prietenieService;
-//        this.messageService = messageService;
+//        this.conversationService = conversationService;
 //        utilizatorService.registerObserver(this);
 //        initModel();
 //    }
@@ -257,7 +257,7 @@
 //    private void showConversationDialog(Long id) {
 //        try {
 //            FXMLLoader loader1 = new FXMLLoader();
-//            loader1.setLocation(getClass().getResource("message-view.fxml"));
+//            loader1.setLocation(getClass().getResource("conversation-view.fxml"));
 //
 //            AnchorPane root1 = (AnchorPane) loader1.load();
 //
@@ -270,7 +270,7 @@
 //            dialogStage.setScene(scene);
 //
 //            MessageController messageController = loader1.getController();
-//            messageController.setService(messageService, dialogStage, id);
+//            messageController.setService(conversationService, dialogStage, id);
 //
 //            dialogStage.show();
 //

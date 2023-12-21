@@ -18,7 +18,7 @@ import ro.ubbcluj.map.socialnetwork.domain.Tuple;
 import ro.ubbcluj.map.socialnetwork.domain.Utilizator;
 import ro.ubbcluj.map.socialnetwork.observer.Observer;
 import ro.ubbcluj.map.socialnetwork.service.CerereService;
-import ro.ubbcluj.map.socialnetwork.service.MessageService;
+import ro.ubbcluj.map.socialnetwork.service.ConversationService;
 import ro.ubbcluj.map.socialnetwork.service.PrietenieService;
 import ro.ubbcluj.map.socialnetwork.service.UtilizatorService;
 
@@ -36,7 +36,7 @@ public class UserController implements Observer {
     UtilizatorService userService;
     CerereService cerereService;
     PrietenieService prietenieService;
-    MessageService messageService;
+    ConversationService conversationService;
     Utilizator utilizator;
     private final ObservableList<Utilizator> modelFriends = FXCollections.observableArrayList();
     private final ObservableList<Utilizator> modelRequests = FXCollections.observableArrayList();
@@ -56,12 +56,12 @@ public class UserController implements Observer {
 
 
 
-    public void setService(Utilizator utilizator, UtilizatorService utilizatorService, CerereService cerereService, PrietenieService prietenieService, MessageService messageService, Stage stage) throws SQLException {
+    public void setService(Utilizator utilizator, UtilizatorService utilizatorService, CerereService cerereService, PrietenieService prietenieService, ConversationService conversationService, Stage stage) throws SQLException {
         this.utilizator = utilizator;
         this.cerereService = cerereService;
         this.userService = utilizatorService;
         this.prietenieService = prietenieService;
-        this.messageService = messageService;
+        this.conversationService = conversationService;
         this.stage = stage;
 
         prietenieService.registerObserver(this);
@@ -169,7 +169,7 @@ public class UserController implements Observer {
     private void showChatDialog(Utilizator user) throws Exception {
         try {
             FXMLLoader loader1 = new FXMLLoader();
-            loader1.setLocation(getClass().getResource("message-view.fxml"));
+            loader1.setLocation(getClass().getResource("conversation-view.fxml"));
 
             AnchorPane root1 = loader1.load();
 
@@ -180,8 +180,8 @@ public class UserController implements Observer {
             Scene scene = new Scene(root1,600,300);
             dialogStage.setScene(scene);
 
-            MessageController messageController = loader1.getController();
-            messageController.setService(messageService, utilizator, user);
+            ConversationController conversationController = loader1.getController();
+            conversationController.setService(conversationService, utilizator, user);
 
             dialogStage.show();
 
@@ -232,7 +232,7 @@ public class UserController implements Observer {
             dialogStage.setScene(scene);
 
             ChannelController channelController = loader1.getController();
-            channelController.setService(messageService, dialogStage, utilizator, selectedUsers);
+            channelController.setService(conversationService, dialogStage, utilizator, selectedUsers);
 
             dialogStage.show();
 

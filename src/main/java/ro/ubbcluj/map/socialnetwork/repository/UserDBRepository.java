@@ -3,6 +3,9 @@ package ro.ubbcluj.map.socialnetwork.repository;
 
 import ro.ubbcluj.map.socialnetwork.domain.Utilizator;
 import ro.ubbcluj.map.socialnetwork.domain.validators.UtilizatorValidator;
+import ro.ubbcluj.map.socialnetwork.repository.paging.Page;
+import ro.ubbcluj.map.socialnetwork.repository.paging.PageImplementation;
+import ro.ubbcluj.map.socialnetwork.repository.paging.Pageable;
 
 import java.sql.*;
 import java.util.HashSet;
@@ -143,3 +146,5 @@ public class UserDBRepository implements Repository<Long, Utilizator> {
     }
 
 }
+
+

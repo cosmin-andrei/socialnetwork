@@ -3,85 +3,83 @@ package ro.ubbcluj.map.socialnetwork;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.scene.control.ContextMenu;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.cell.PropertyValueFactory;
-import javafx.scene.input.ContextMenuEvent;
 import ro.ubbcluj.map.socialnetwork.controller.MessageAlert;
+import ro.ubbcluj.map.socialnetwork.domain.Conversation;
 import ro.ubbcluj.map.socialnetwork.domain.Message;
 import ro.ubbcluj.map.socialnetwork.domain.Utilizator;
 import ro.ubbcluj.map.socialnetwork.observer.Observer;
-import ro.ubbcluj.map.socialnetwork.service.MessageService;
+import ro.ubbcluj.map.socialnetwork.service.ConversationService;
 
 import java.sql.SQLException;
 import java.util.Collection;
 
-public class MessageController implements Observer {
+public class ConversationController implements Observer {
 
     @FXML
     private TextArea msgArea;
     @FXML
-    TableView<Message> tableViewMessages;
+    TableView<Conversation> tableViewMessages;
     @FXML
-    TableColumn<Message, String> fromColumn;
+    TableColumn<Conversation, String> fromColumn;
     @FXML
-    TableColumn<Message, String> toColumn;
+    TableColumn<Conversation, String> toColumn;
     @FXML
-    TableColumn<Message, String> messagesColumn;
+    TableColumn<Conversation, String> messagesColumn;
     @FXML
-    TableColumn<Message, String> dateColumn;
+    TableColumn<Conversation, String> dateColumn;
 
-    private MessageService messageService;
-    private final ObservableList<Message> model = FXCollections.observableArrayList();
+    private ConversationService conversationService;
+    private final ObservableList<Conversation> model = FXCollections.observableArrayList();
     private Utilizator fromUser;
     private Utilizator toUser;
 
-    public MessageController() {
+    public ConversationController() {
     }
 
-    public void setService(MessageService messageService, Utilizator fromUser, Utilizator toUser) {
+    public void setService(ConversationService conversationService, Utilizator fromUser, Utilizator toUser) {
         this.fromUser = fromUser;
         this.toUser = toUser;
-        this.messageService=messageService;
+        this.conversationService = conversationService;
 
-        messageService.registerObserver(this);
+        conversationService.registerObserver(this);
         initModel();
     }
 
     public void initialize() {
         fromColumn.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getSender().getFirstName()));
         toColumn.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getReceiver().getFirstName()));
-        messagesColumn.setCellValueFactory(new PropertyValueFactory<>("text"));
+        messagesColumn.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getMessage().getText()));
         dateColumn.setCellValueFactory(new PropertyValueFactory<>("date"));
         tableViewMessages.setItems(model);
     }
 
     private void initModel() {
-        Collection<Message> all = messageService.conversation(fromUser.getId(), toUser.getId());
+        Collection<Conversation> all = conversationService.chat(fromUser.getId(), toUser.getId());
         model.setAll(all);
     }
 
     public void handleSend() {
-        Message selectedMessage = tableViewMessages.getSelectionModel().getSelectedItem();
+        Conversation selectedMessage = tableViewMessages.getSelectionModel().getSelectedItem();
         String msgAreaText = msgArea.getText();
         try {
-            Message message = new Message(fromUser, toUser, msgAreaText);
+            Message message = new Message(msgAreaText);
+            message.setId(conversationService.generateIdMessage());
+            Conversation conversation = new Conversation(fromUser, toUser, message);
             if (selectedMessage != null) {
-                message.setIdReply(selectedMessage.getId());
-                String replyInfo = "Reply la: " + selectedMessage.getText() + "\n";
-                msgAreaText = replyInfo + msgAreaText;
+                conversation.setIdReply(selectedMessage.getId());
             }
-            message.setText(msgAreaText);
-            messageService.addMessage(message);
+            conversationService.addMessage(conversation);
             initModel();
             tableViewMessages.getSelectionModel().clearSelection();
             msgArea.clear();
         } catch (Exception e) {
-            MessageAlert.showErrorMessage(null, "Eroare: " + e.getMessage());
+//            MessageAlert.showErrorMessage(null, "Eroare: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 

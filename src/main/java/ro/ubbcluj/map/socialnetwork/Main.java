@@ -3,17 +3,14 @@ package ro.ubbcluj.map.socialnetwork;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
-import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import ro.ubbcluj.map.socialnetwork.domain.Utilizator;
-import ro.ubbcluj.map.socialnetwork.domain.validators.CerereValidator;
-import ro.ubbcluj.map.socialnetwork.domain.validators.MessageValidator;
-import ro.ubbcluj.map.socialnetwork.domain.validators.PrietenieValidator;
-import ro.ubbcluj.map.socialnetwork.domain.validators.UtilizatorValidator;
+import ro.ubbcluj.map.socialnetwork.domain.validators.*;
 import ro.ubbcluj.map.socialnetwork.repository.*;
+import ro.ubbcluj.map.socialnetwork.repository.PagingRepository.UserDBPagingRepository;
 import ro.ubbcluj.map.socialnetwork.service.CerereService;
-import ro.ubbcluj.map.socialnetwork.service.MessageService;
+import ro.ubbcluj.map.socialnetwork.service.ConversationService;
 import ro.ubbcluj.map.socialnetwork.service.PrietenieService;
 import ro.ubbcluj.map.socialnetwork.service.UtilizatorService;
 
@@ -24,7 +21,8 @@ public class Main extends Application {
     final String password = "2003";
 
     UserDBRepository repoUtilizator = new UserDBRepository(new UtilizatorValidator(), url, username, password);
-    UtilizatorService serv = new UtilizatorService(repoUtilizator);
+    UserDBPagingRepository userDBPagingRepository = new UserDBPagingRepository(new UtilizatorValidator(), url, username, password);
+    UtilizatorService serv = new UtilizatorService(userDBPagingRepository, repoUtilizator);
 
     CerereValidator cerereValidator = new CerereValidator();
     PrietenieValidator prietenieValidator = new PrietenieValidator();
@@ -34,8 +32,8 @@ public class Main extends Application {
     UserDBRepository userDBRepository = new UserDBRepository(utilizatorValidator, url, username, password);
     CerereService cerereService = new CerereService(prietenieDBRepository, userDBRepository, cerereDBRepository);
     PrietenieService prietenieService = new PrietenieService(repoUtilizator, prietenieDBRepository);
-    MessageDBRepository messageDBRepository = new MessageDBRepository(new MessageValidator(), url, username, password);
-    MessageService messageService = new MessageService(messageDBRepository, prietenieDBRepository, userDBRepository);
+    ConversationDBRepository conversationDBRepository = new ConversationDBRepository(new ConversationValidator(), url, username, password);
+    ConversationService conversationService = new ConversationService(conversationDBRepository, prietenieDBRepository, userDBRepository);
 
     public static void main(String[] args) {
         launch(args);
@@ -73,7 +71,7 @@ public class Main extends Application {
         userStage.setScene(userScene);
 
         UserController userController = userLoader.getController();
-        userController.setService(user, serv, cerereService, prietenieService, messageService, userStage);
+        userController.setService(user, serv, cerereService, prietenieService, conversationService, userStage);
 
         userStage.show();
     }
