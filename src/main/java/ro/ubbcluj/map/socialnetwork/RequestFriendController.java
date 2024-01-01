@@ -11,6 +11,8 @@ import ro.ubbcluj.map.socialnetwork.domain.CererePrietenie;
 import ro.ubbcluj.map.socialnetwork.domain.Tuple;
 import ro.ubbcluj.map.socialnetwork.domain.Utilizator;
 import ro.ubbcluj.map.socialnetwork.observer.Observer;
+import ro.ubbcluj.map.socialnetwork.repository.paging.Page;
+import ro.ubbcluj.map.socialnetwork.repository.paging.Pageable;
 import ro.ubbcluj.map.socialnetwork.service.CerereService;
 import ro.ubbcluj.map.socialnetwork.service.PrietenieService;
 import ro.ubbcluj.map.socialnetwork.service.UtilizatorService;
@@ -20,15 +22,19 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Objects;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 public class RequestFriendController implements Observer {
 
+
+    private int pageSizeUser=5;
+    private int currentPageUser=0;
+    private int totalNrOfElemsUser=0;
     @FXML
-    private Pagination bttnPage;
+    Button prevButtonUser;
     @FXML
-    private TextField filterUsername;
-    @FXML
-    private TextField filterPage;
+    Button nextButtonUser;
     private CerereService cerereService;
     private UtilizatorService userService;
     private final ObservableList<Utilizator> model = FXCollections.observableArrayList();
@@ -48,45 +54,17 @@ public class RequestFriendController implements Observer {
 
 
     @FXML
-    public void initialize() {
+    public void initialize() throws SQLException {
         tableColumnUsername.setCellValueFactory(new PropertyValueFactory<>("username"));
         tableColumnNume.setCellValueFactory(new PropertyValueFactory<>("firstName"));
         tableColumnPrenume.setCellValueFactory(new PropertyValueFactory<>("lastName"));
         tableViewUser.setItems(model);
 
-        filterUsername.textProperty().addListener((observable, oldValue, newValue) -> {
-            try {
-                // Obține toți utilizatorii
-                Collection<Utilizator> all = userService.getAll();
+        initModel();
 
-                // Filtrare în funcție de conținutul câmpului filterUsername
-                Collection<Utilizator> filteredUsers = new ArrayList<>();
-                for (Utilizator user : all) {
-                    if (user.getUsername().toLowerCase().contains(newValue.toLowerCase())) {
-                        filteredUsers.add(user);
-                    }
-                }
-
-                // Actualizează modelul cu utilizatorii filtrați
-                model.setAll(filteredUsers);
-            } catch (SQLException e) {
-                MessageAlert.showErrorMessage(null, "Eroare: " + e.getMessage());
-            }
-        });
-
-        filterPage.textProperty().addListener((observable, oldValue, newValue) -> {
-            try {
-                userService.setPage(1);
-                userService.setPageSize(Integer.parseInt(newValue));
-                initModel();
-            } catch (NumberFormatException e) {
-                MessageAlert.showErrorMessage(null, "Introduceți un număr valid pentru pagină.");
-            } catch (SQLException e) {
-                MessageAlert.showErrorMessage(null, "Eroare: " + e.getMessage());
-            }
-        });
 
     }
+
 
     public void setRequestService(UtilizatorService userService, CerereService cerereService, PrietenieService prietenieService, Stage stage, Utilizator utilizator) throws SQLException {
         this.userService = userService;
@@ -95,38 +73,27 @@ public class RequestFriendController implements Observer {
         this.stage = stage;
         this.utilizator = utilizator;
         cerereService.registerObserver(this);
+        userService.setPageSize(10);
+        userService.setPage(1);
         initModel();
     }
 
 
     private void initModel() throws SQLException {
+        Page<Utilizator> pageUsers = userService.findAll(new Pageable(currentPageUser, pageSizeUser));
 
-        Collection<Utilizator> all;
-        if (!filterPage.getText().isEmpty()) {
-            userService.setPage(1);
-            userService.setPageSize(Integer.parseInt(filterPage.getText()));
-            all = userService.getUsers();
-        }
-        else {
-            all = userService.getAll();
+        int maxPageUser = (int) Math.ceil((double) pageUsers.getTotalNrOfElems() / pageSizeUser) - 1;
+
+        if(currentPageUser > maxPageUser){
+            currentPageUser = maxPageUser;
+            pageUsers = userService.findAll(new Pageable(currentPageUser, pageSizeUser));
         }
 
+        observableUser.setAll(StreamSupport.stream(pageUsers.getElementsOnPage().spliterator(),false).collect(Collectors.toList()));
+        totalNrOfElemsUser = pageUsers.getTotalNrOfElems();
+        prevButtonUser.setDisable(currentPageUser==0);
+        nextButtonUser.setDisable((currentPageUser+1) * pageSizeUser >= totalNrOfElemsUser);
 
-        Iterator<Utilizator> iterator = all.iterator();
-        while (iterator.hasNext()) {
-            Utilizator user = iterator.next();
-            if (Objects.equals(user.getId(), utilizator.getId())) {
-                iterator.remove();
-            }
-            else if(prietenieService.verifyPrietenie(utilizator.getId(), user.getId())){
-                iterator.remove();
-            }
-            else if(cerereService.verifyCerere(utilizator.getId(), user.getId())){
-                iterator.remove();
-            }
-        }
-
-        model.setAll(all);
     }
 
 

@@ -3,19 +3,14 @@ package ro.ubbcluj.map.socialnetwork.repository;
 
 import ro.ubbcluj.map.socialnetwork.domain.Utilizator;
 import ro.ubbcluj.map.socialnetwork.domain.validators.UtilizatorValidator;
-import ro.ubbcluj.map.socialnetwork.repository.paging.Page;
-import ro.ubbcluj.map.socialnetwork.repository.paging.PageImplementation;
-import ro.ubbcluj.map.socialnetwork.repository.paging.Pageable;
 
 import java.sql.*;
-import java.util.HashSet;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 public class UserDBRepository implements Repository<Long, Utilizator> {
 
     private final UtilizatorValidator validator;
-    private Connection connection;
+    private final Connection connection;
 
     public UserDBRepository(UtilizatorValidator validator, String url, String username, String password) {
         this.validator = validator;
@@ -35,7 +30,7 @@ public class UserDBRepository implements Repository<Long, Utilizator> {
                     "where id = ?")
 
         ) {
-            statement.setInt(1, Math.toIntExact(longID));
+            statement.setLong(1, longID);
             ResultSet resultSet = statement.executeQuery();
             if(resultSet.next()) {
                 String username = resultSet.getString("username");
@@ -55,7 +50,7 @@ public class UserDBRepository implements Repository<Long, Utilizator> {
 
     @Override
     public Iterable<Utilizator> findAll() {
-        Set<Utilizator> users = new HashSet<>();
+        List<Utilizator> users = new ArrayList<>();
 
         try (PreparedStatement statement = connection.prepareStatement("select * from users");
              ResultSet resultSet = statement.executeQuery()

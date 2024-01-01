@@ -1,13 +1,20 @@
 package ro.ubbcluj.map.socialnetwork.repository.paging;
 
-import java.util.stream.Stream;
+public class Page<E> {
 
-public interface Page<E> {
-    Pageable getPageable();
+    private Iterable<E> elementsOnPage;
+    private int totalNrOfElems;
 
-    Pageable nextPageable();
+    public Page(Iterable<E> elementsOnPage, int totalNrOfElems) {
+        this.elementsOnPage = elementsOnPage;
+        this.totalNrOfElems = totalNrOfElems;
+    }
 
-    Stream<E> getContent();
+    public Iterable<E> getElementsOnPage() {
+        return elementsOnPage;
+    }
 
-
+    public int getTotalNrOfElems() {
+        return totalNrOfElems;
+    }
 }

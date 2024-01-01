@@ -5,12 +5,12 @@ import ro.ubbcluj.map.socialnetwork.domain.validators.ValidationException;
 import ro.ubbcluj.map.socialnetwork.observer.Observable;
 import ro.ubbcluj.map.socialnetwork.observer.Observer;
 import ro.ubbcluj.map.socialnetwork.repository.PagingRepository.UserDBPagingRepository;
-import ro.ubbcluj.map.socialnetwork.repository.Repository;
 import ro.ubbcluj.map.socialnetwork.repository.UserDBRepository;
 import ro.ubbcluj.map.socialnetwork.repository.paging.Page;
 import ro.ubbcluj.map.socialnetwork.repository.paging.Pageable;
-import ro.ubbcluj.map.socialnetwork.repository.paging.PageableImplementation;
 
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.sql.SQLException;
 import java.util.*;
 
@@ -32,8 +32,11 @@ public class UtilizatorService implements Observable {
 
         });
 
-        List<Utilizator> all = (List<Utilizator>) repoSimplu.findAll();
-        long id = all.isEmpty() ? 1 : all.get(0).getId() + 1;
+//        List<Utilizator> all = (List<Utilizator>) repoSimplu.findAll();
+//        long id = all.isEmpty() ? 1 : all.get(0).getId() + 1;
+
+        UUID uuid = UUID.randomUUID();
+        long id = uuid.getMostSignificantBits() & Long.MAX_VALUE;
 
         utilizator.setId(id);
         repo.save(utilizator);
@@ -50,7 +53,7 @@ public class UtilizatorService implements Observable {
         notifyAllObservers();
     }
 
-    private Long searchID(String username) throws SQLException {
+    private Long searchID(String username) {
         for (Utilizator it : repo.findAll()) {
             if (Objects.equals(it.getUsername(), username)) {
                 return it.getId();
@@ -68,7 +71,7 @@ public class UtilizatorService implements Observable {
         notifyAllObservers();
     }
 
-    public Utilizator findUser(String username) throws SQLException {
+    public Utilizator findUser(String username) {
         for (Utilizator it : repo.findAll()) {
             if (Objects.equals(it.getUsername(), username)) {
                 return it;
@@ -94,37 +97,31 @@ public class UtilizatorService implements Observable {
         }
     }
 
-    public boolean verifyLogin(String username, String password) throws SQLException {
+    public boolean verifyLogin(String username, String password) {
         Long idUser = searchID(username);
         Optional<Utilizator> user = repo.findOne(idUser);
         if (user.isPresent()) {
-            return Objects.equals(user.get().getPassword(), password);
+            String hashedPassword = hashPassword(password);
+            return Objects.equals(user.get().getPassword(), hashedPassword);
         } else {
             throw new ValidationException("Utilizatorul nu exista");
         }
     }
-
-
-    //PAGINARE
-
-    private int page;
-    private int size;
-
-    private Pageable pageable;
-
-    public void setPageSize(int size) {
-        this.size = size;
-    }
-
-    public void setPage(int page) {
-        this.page = page;
-    }
-
-    public Set<Utilizator> getAll() {
-        Pageable pageable = new PageableImplementation(this.page, this.size);
-        Page<Utilizator> utilizatorPage = repo.findAll(pageable);
-        return (Set<Utilizator>) utilizatorPage.getContent();
+    
+    public static String hashPassword(String password) {
+        try {
+            MessageDigest md = MessageDigest.getInstance("SHA-256");
+            md.update(password.getBytes());
+            byte[] digest = md.digest();
+            return Base64.getEncoder().encodeToString(digest);
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException(e);
+        }
     }
 
 
+    public Page<Utilizator> findAll(Pageable pageable) {
+        Page<Utilizator> utilizatorPage = repo.findAllOnPage(pageable);
+        return new HashSet<>(utilizatorPage.getElementsOnPage().toList());
+    }
 }

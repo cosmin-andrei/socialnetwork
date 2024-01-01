@@ -33,13 +33,16 @@ public class RegisterController {
         String firstName = textFieldPrenume.getText();
         String lastName = textFieldNume.getText();
         String password = textFieldPassword.getText();
+        String hashedPassword = UtilizatorService.hashPassword(password);
+        System.out.println(hashedPassword);
         Utilizator utilizator = new Utilizator(username,firstName,lastName);
-        utilizator.setPassword(password);
+        utilizator.setPassword(hashedPassword);
         try {
             utilizatorService.adaugaUtilizator(utilizator);
             MessageAlert.showMessage(stage, Alert.AlertType.INFORMATION,"Creare cont","Cont creat cu succes!");
             stage.close();
         }catch (Exception e){
+            e.printStackTrace();
             MessageAlert.showErrorMessage(null, "Eroare: " + e.getMessage());
         }
     }

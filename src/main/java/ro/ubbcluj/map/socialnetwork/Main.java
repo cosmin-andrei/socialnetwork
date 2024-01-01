@@ -29,7 +29,7 @@ public class Main extends Application {
     CerereDBRepository cerereDBRepository = new CerereDBRepository(cerereValidator, url, username, password);
     PrietenieDBRepository prietenieDBRepository = new PrietenieDBRepository(prietenieValidator, url, username, password);
     UtilizatorValidator utilizatorValidator = new UtilizatorValidator();
-    UserDBRepository userDBRepository = new UserDBRepository(utilizatorValidator, url, username, password);
+    UserDBRepository userDBRepository = new UserDBPagingRepository(utilizatorValidator, url, username, password);
     CerereService cerereService = new CerereService(prietenieDBRepository, userDBRepository, cerereDBRepository);
     PrietenieService prietenieService = new PrietenieService(repoUtilizator, prietenieDBRepository);
     ConversationDBRepository conversationDBRepository = new ConversationDBRepository(new ConversationValidator(), url, username, password);

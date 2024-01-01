@@ -153,6 +153,7 @@ public class UserController implements Observer {
             dialogStage.show();
 
         } catch (Exception e){
+            e.printStackTrace();
             MessageAlert.showErrorMessage(null, "Eroare: " + e.getMessage());
         }
     }
