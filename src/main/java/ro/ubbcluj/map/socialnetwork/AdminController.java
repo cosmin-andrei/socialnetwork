@@ -153,7 +153,7 @@
 //
 //        try {
 //            FXMLLoader loader1 = new FXMLLoader();
-//            loader1.setLocation(getClass().getResource("request-friendship.fxml"));
+//            loader1.setLocation(getClass().getResource("request-friend.fxml"));
 //
 //            AnchorPane root1 = (AnchorPane) loader1.load();
 //

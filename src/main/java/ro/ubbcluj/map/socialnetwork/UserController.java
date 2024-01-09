@@ -26,6 +26,7 @@ import java.sql.SQLException;
 import java.util.Collection;
 import java.util.List;
 
+@SuppressWarnings("CallToPrintStackTrace")
 public class UserController implements Observer {
 
 
@@ -133,30 +134,30 @@ public class UserController implements Observer {
     }
 
     private void showRequestFriendshipDialog() {
-
         try {
-            FXMLLoader loader1 = new FXMLLoader();
-            loader1.setLocation(getClass().getResource("request-friendship.fxml"));
+            FXMLLoader loader = new FXMLLoader();
+            loader.setLocation(getClass().getResource("request-friend.fxml"));
 
-            AnchorPane root1 = loader1.load();
+            AnchorPane root = loader.load();
 
             Stage dialogStage = new Stage();
             dialogStage.setTitle("Adauga prieten");
             dialogStage.initModality(Modality.WINDOW_MODAL);
             dialogStage.setResizable(true);
-            Scene scene = new Scene(root1,600,300);
+            Scene scene = new Scene(root, 600, 300);
             dialogStage.setScene(scene);
 
-            RequestFriendController requestFriendController = loader1.getController();
-            requestFriendController.setRequestService(userService,cerereService,prietenieService,dialogStage,utilizator);
+            RequestFriendController requestFriendController = loader.getController();
+            requestFriendController.setRequestService(userService, cerereService, dialogStage, utilizator);
 
             dialogStage.show();
-
-        } catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
             MessageAlert.showErrorMessage(null, "Eroare: " + e.getMessage());
         }
     }
+
+
 
     public void handleChat() throws Exception {
         Utilizator user = tableViewFriends.getSelectionModel().getSelectedItem();
