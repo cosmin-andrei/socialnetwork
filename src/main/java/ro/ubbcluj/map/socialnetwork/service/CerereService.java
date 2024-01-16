@@ -8,15 +8,15 @@ import ro.ubbcluj.map.socialnetwork.domain.validators.ValidationException;
 import ro.ubbcluj.map.socialnetwork.observer.Observable;
 import ro.ubbcluj.map.socialnetwork.observer.Observer;
 import ro.ubbcluj.map.socialnetwork.repository.CerereDBRepository;
+import ro.ubbcluj.map.socialnetwork.repository.PagingRepository.CerereDBPagingRepository;
 import ro.ubbcluj.map.socialnetwork.repository.PrietenieDBRepository;
 import ro.ubbcluj.map.socialnetwork.repository.UserDBRepository;
+import ro.ubbcluj.map.socialnetwork.repository.paging.Page;
+import ro.ubbcluj.map.socialnetwork.repository.paging.Pageable;
 
 import java.sql.SQLException;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 
 public class CerereService implements Observable {
 
@@ -24,12 +24,15 @@ public class CerereService implements Observable {
     private final UserDBRepository repoUtilizatori;
     private final CerereDBRepository repoCerere;
 
+    private final CerereDBPagingRepository repoPageCerere;
+
     private final List<Observer> observers = new ArrayList<>();
 
-    public CerereService(PrietenieDBRepository repoPrietenie, UserDBRepository repoUtilizatori, CerereDBRepository repoCerere) {
+    public CerereService(PrietenieDBRepository repoPrietenie, UserDBRepository repoUtilizatori, CerereDBRepository repoCerere, CerereDBPagingRepository repoPageCerere) {
         this.repoPrietenie = repoPrietenie;
         this.repoUtilizatori = repoUtilizatori;
         this.repoCerere = repoCerere;
+        this.repoPageCerere = repoPageCerere;
     }
 
     public void addCerere(CererePrietenie cererePrietenie) throws SQLException {
@@ -101,6 +104,19 @@ public class CerereService implements Observable {
         for (Observer observer : observers) {
                 observer.update();
         }
+    }
+
+    public Page<Utilizator> findAllOnPage(Pageable pageable, Long id) {
+
+        Page<CererePrietenie> pageRequests = repoPageCerere.findAllOnPage(pageable, id);
+        List<Utilizator> users = new ArrayList<>();
+        List<CererePrietenie> cererePrietenies = (List<CererePrietenie>) pageRequests.getElementsOnPage();
+        cererePrietenies.forEach(cererePrietenie -> {
+            Long userId = cererePrietenie.getId().getLeft();
+            repoUtilizatori.findOne(userId).ifPresent(users::add);
+        });
+
+        return new Page<>(users, pageRequests.getTotalNrOfElems());
     }
 
 }

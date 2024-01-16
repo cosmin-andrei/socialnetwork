@@ -2,13 +2,11 @@ package ro.ubbcluj.map.socialnetwork;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
-import javafx.scene.control.Alert;
-import javafx.scene.control.SelectionMode;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
+import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.Modality;
@@ -17,18 +15,20 @@ import ro.ubbcluj.map.socialnetwork.controller.MessageAlert;
 import ro.ubbcluj.map.socialnetwork.domain.Tuple;
 import ro.ubbcluj.map.socialnetwork.domain.Utilizator;
 import ro.ubbcluj.map.socialnetwork.observer.Observer;
+import ro.ubbcluj.map.socialnetwork.repository.paging.Page;
+import ro.ubbcluj.map.socialnetwork.repository.paging.Pageable;
 import ro.ubbcluj.map.socialnetwork.service.CerereService;
 import ro.ubbcluj.map.socialnetwork.service.ConversationService;
 import ro.ubbcluj.map.socialnetwork.service.PrietenieService;
 import ro.ubbcluj.map.socialnetwork.service.UtilizatorService;
 
 import java.sql.SQLException;
-import java.util.Collection;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
-@SuppressWarnings("CallToPrintStackTrace")
+
 public class UserController implements Observer {
-
 
     @FXML
     private TableView<Utilizator> tableViewFriends;
@@ -54,10 +54,29 @@ public class UserController implements Observer {
     @FXML
     private TableColumn<Utilizator, String> NumeFriendColumn;
 
+    @FXML
+    Button prevBttnFriends;
+    @FXML
+    Button prevBttnCereri;
+    @FXML
+    Button nextBttnFriends;
+    @FXML
+    Button nextBttnCereri;
+    @FXML
+    TextField lblPageFriends;
+    @FXML
+    TextField lblPageCereri;
+
+    private int pageSizeFriends = 2;
+    private int pageSizeCereri= 2;
+
+    private int currentPageFriends = 0;
+    private int currentPageCereri = 0;
+    private int totalNrOfElemsFriends = 0;
+    private int totalNrOfElemsRequests = 0;
 
 
-
-    public void setService(Utilizator utilizator, UtilizatorService utilizatorService, CerereService cerereService, PrietenieService prietenieService, ConversationService conversationService, Stage stage) throws SQLException {
+    public void setService(Utilizator utilizator, UtilizatorService utilizatorService, CerereService cerereService, PrietenieService prietenieService, ConversationService conversationService, Stage stage) {
         this.utilizator = utilizator;
         this.cerereService = cerereService;
         this.userService = utilizatorService;
@@ -69,10 +88,11 @@ public class UserController implements Observer {
         cerereService.registerObserver(this);
 
         initializeFriends();
-        initModelFriends();
-
         initializeRequests();
+
+        initModelFriends();
         initModelRequests();
+
     }
 
     public void handleDelete() {
@@ -136,7 +156,7 @@ public class UserController implements Observer {
     private void showRequestFriendshipDialog() {
         try {
             FXMLLoader loader = new FXMLLoader();
-            loader.setLocation(getClass().getResource("request-friend.fxml"));
+            loader.setLocation(getClass().getResource("/view/request-friend.fxml"));
 
             AnchorPane root = loader.load();
 
@@ -249,6 +269,7 @@ public class UserController implements Observer {
         PrenumeFriendColumn.setCellValueFactory(new PropertyValueFactory<>("firstName"));
         NumeFriendColumn.setCellValueFactory(new PropertyValueFactory<>("lastName"));
         tableViewFriends.setItems(modelFriends);
+        lblPageFriends.textProperty().addListener(o -> updatePageFriends());
     }
 
     @FXML
@@ -257,25 +278,93 @@ public class UserController implements Observer {
         PrenumeRequestColumn.setCellValueFactory(new PropertyValueFactory<>("firstName"));
         NumeRequestColumn.setCellValueFactory(new PropertyValueFactory<>("lastName"));
         tableViewRequests.setItems(modelRequests);
+        lblPageCereri.textProperty().addListener(o -> updatePageCereri());
     }
 
 
-    private void initModelFriends() throws SQLException {
-        Collection<Utilizator> friends = prietenieService.getPrieteniById(utilizator.getId());
-        modelFriends.setAll(friends);
-        tableViewFriends.setItems(modelFriends);
+    private void initModelFriends() {
+        Page<Utilizator> pageUsers = prietenieService.findAllOnPage(new Pageable(currentPageFriends, pageSizeFriends), utilizator.getId());
+
+        int maxPageUser = (int) Math.ceil((double) pageUsers.getTotalNrOfElems() / pageSizeFriends) - 1;
+        if(maxPageUser > 0) {
+            if (currentPageFriends > maxPageUser) {
+                currentPageFriends = maxPageUser;
+
+                pageUsers = prietenieService.findAllOnPage(new Pageable(currentPageFriends, pageSizeFriends), utilizator.getId());
+            }
+        }
+
+        modelFriends.setAll(StreamSupport.stream(pageUsers.getElementsOnPage().spliterator(), false).collect(Collectors.toList()));
+        totalNrOfElemsFriends = pageUsers.getTotalNrOfElems();
+        prevBttnFriends.setDisable(currentPageFriends == 0);
+        nextBttnFriends.setDisable((currentPageFriends + 1) * pageSizeFriends >= totalNrOfElemsFriends);
+
     }
 
 
     private void initModelRequests() {
-        Collection<Utilizator> requests = cerereService.pendingRequests(utilizator.getId());
-        modelRequests.setAll(requests);
-        tableViewRequests.setItems(modelRequests);
+        Page<Utilizator> pageUsers = cerereService.findAllOnPage(new Pageable(currentPageCereri, pageSizeCereri), utilizator.getId());
+
+        int maxPageUser = (int) Math.ceil((double) pageUsers.getTotalNrOfElems() / pageSizeCereri) - 1;
+        if(maxPageUser > 0) {
+
+            if (currentPageCereri > maxPageUser) {
+                currentPageCereri = maxPageUser;
+
+                pageUsers = cerereService.findAllOnPage(new Pageable(currentPageCereri, pageSizeCereri), utilizator.getId());
+            }
+        }
+        modelRequests.setAll(StreamSupport.stream(pageUsers.getElementsOnPage().spliterator(), false).collect(Collectors.toList()));
+        totalNrOfElemsRequests = pageUsers.getTotalNrOfElems();
+        prevBttnCereri.setDisable(currentPageCereri == 0);
+        nextBttnCereri.setDisable((currentPageCereri + 1) * pageSizeCereri >= totalNrOfElemsRequests);
     }
 
     @Override
     public void update() throws SQLException {
         initModelRequests();
         initModelFriends();
+    }
+
+    private void updatePageFriends()  {
+        if (lblPageFriends.getText().isEmpty() || Integer.parseInt(lblPageFriends.getText()) == 0) {
+            initModelFriends();
+        } else {
+            this.pageSizeFriends = Integer.parseInt(lblPageFriends.getText());
+            this.currentPageFriends = 0;
+            initModelFriends();
+        }
+    }
+
+    private void updatePageCereri() {
+
+        if (lblPageCereri.getText().isEmpty() || Integer.parseInt(lblPageCereri.getText()) == 0) {
+            initModelRequests();
+        } else {
+            this.pageSizeCereri = Integer.parseInt(lblPageCereri.getText());
+            this.currentPageCereri = 0;
+           initModelRequests();
+        }
+    }
+
+    public void handlePrevFriend(ActionEvent ev) {
+            this.currentPageFriends --;
+            initModelFriends();
+
+    }
+
+    public void handleNextFriend(ActionEvent ev) {
+        this.currentPageFriends++;
+        initModelFriends();
+    }
+
+    public void handleNextCerere(ActionEvent ev) {
+        this.currentPageCereri++;
+        initModelRequests();
+    }
+
+    public void handlePrevCerere(ActionEvent ev) {
+            this.currentPageCereri--;
+            initModelRequests();
     }
 }

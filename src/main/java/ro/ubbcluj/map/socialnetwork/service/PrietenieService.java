@@ -1,13 +1,17 @@
 package ro.ubbcluj.map.socialnetwork.service;
 
 
+import ro.ubbcluj.map.socialnetwork.domain.CererePrietenie;
 import ro.ubbcluj.map.socialnetwork.domain.Prietenie;
 import ro.ubbcluj.map.socialnetwork.domain.Tuple;
 import ro.ubbcluj.map.socialnetwork.domain.Utilizator;
 import ro.ubbcluj.map.socialnetwork.domain.validators.ValidationException;
 import ro.ubbcluj.map.socialnetwork.observer.Observable;
 import ro.ubbcluj.map.socialnetwork.observer.Observer;
+import ro.ubbcluj.map.socialnetwork.repository.PagingRepository.PrietenieDBPagingRepository;
 import ro.ubbcluj.map.socialnetwork.repository.Repository;
+import ro.ubbcluj.map.socialnetwork.repository.paging.Page;
+import ro.ubbcluj.map.socialnetwork.repository.paging.Pageable;
 
 import java.sql.SQLException;
 import java.time.LocalDate;
@@ -20,11 +24,13 @@ import java.util.stream.StreamSupport;
 public class PrietenieService implements Observable {
 
     Repository<Long, Utilizator> repoUtilizator;
+    private final PrietenieDBPagingRepository repoPage;
     List<Observer> observers = new ArrayList<>();
 
     Repository<Tuple<Long, Long>, Prietenie> repoPrietenie ;
-    public PrietenieService(Repository<Long, Utilizator> repoUtilizator, Repository<Tuple<Long, Long>, Prietenie> repoPrietenie) {
+    public PrietenieService(Repository<Long, Utilizator> repoUtilizator, PrietenieDBPagingRepository repoPage, Repository<Tuple<Long, Long>, Prietenie> repoPrietenie) {
         this.repoUtilizator = repoUtilizator;
+        this.repoPage = repoPage;
         this.repoPrietenie = repoPrietenie;
     }
 
@@ -210,5 +216,25 @@ public class PrietenieService implements Observable {
         Optional<Prietenie> prietenie = repoPrietenie.findOne(new Tuple<>(id,id1));
         Optional<Prietenie> prietenie1 = repoPrietenie.findOne(new Tuple<>(id1, id));
         return prietenie.isPresent() || prietenie1.isPresent();
+    }
+
+    public Page<Utilizator> findAllOnPage(Pageable pageable, Long id) {
+        Page<Prietenie> pageFriends = repoPage.findAllOnPage(pageable, id);
+        List<Utilizator> users = new ArrayList<>();
+        List<Prietenie> friends = (List<Prietenie>) pageFriends.getElementsOnPage();
+        friends.forEach(prietenie -> {
+            Long userId;
+            if(Objects.equals(id, prietenie.getId().getLeft())){
+                userId = prietenie.getId().getRight();
+            }else {
+                userId = prietenie.getId().getLeft();
+            }
+            try {
+                repoUtilizator.findOne(userId).ifPresent(users::add);
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        });
+        return new Page<>(users, pageFriends.getTotalNrOfElems());
     }
 }

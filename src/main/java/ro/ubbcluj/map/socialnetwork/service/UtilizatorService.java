@@ -120,11 +120,7 @@ public class UtilizatorService implements Observable {
     }
 
     public Page<Utilizator> findAllOnPage(Pageable pageable) {
-        return repo.findAllOnPage(pageable);
+        return repo.findAllOnPage(pageable, 0L);
     }
 
-//    public Page<Utilizator> findAll(Pageable pageable) {
-//        Page<Utilizator> utilizatorPage = repo.findAllOnPage(pageable);
-//        return new HashSet<>(utilizatorPage.getElementsOnPage().toList());
-//    }
 }

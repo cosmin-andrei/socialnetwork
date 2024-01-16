@@ -25,7 +25,7 @@ import java.util.stream.StreamSupport;
 
 public class RequestFriendController implements Observer {
 
-    private int pageSizeUser = 5;
+    private int pageSizeUser = 2;
     private int currentPageUser = 0;
     private int totalNrOfElemsUser = 0;
 
@@ -34,7 +34,9 @@ public class RequestFriendController implements Observer {
     @FXML
     Button nextButtonUser;
     @FXML
-    TextField nrPagini;
+    TextField lblPgUser;
+
+
 
     private CerereService cerereService;
     private UtilizatorService userService;
@@ -68,7 +70,9 @@ public class RequestFriendController implements Observer {
         tableColumnUsername.setCellValueFactory(new PropertyValueFactory<>("username"));
         tableColumnNume.setCellValueFactory(new PropertyValueFactory<>("firstName"));
         tableColumnPrenume.setCellValueFactory(new PropertyValueFactory<>("lastName"));
+
         tableViewUser.setItems(observableList);
+        lblPgUser.textProperty().addListener(o -> updatePageUser());
     }
 
 
@@ -83,21 +87,23 @@ public class RequestFriendController implements Observer {
 
     private void initModel() {
 
-            Page<Utilizator> pageUsers = userService.findAllOnPage(new Pageable(currentPageUser, pageSizeUser));
+        Page<Utilizator> pageUsers = userService.findAllOnPage(new Pageable(currentPageUser, pageSizeUser));
 
-            int maxPageUser = (int) Math.ceil((double) pageUsers.getTotalNrOfElems() / pageSizeUser) - 1;
+        int maxPageUser = (int) Math.ceil((double) pageUsers.getTotalNrOfElems() / pageSizeUser) - 1;
 
-            if (currentPageUser > maxPageUser) {
-                currentPageUser = maxPageUser;
-                pageUsers = userService.findAllOnPage(new Pageable(currentPageUser, pageSizeUser));
-            }
+        if (currentPageUser > maxPageUser) {
+            currentPageUser = maxPageUser;
 
-            observableList.setAll(StreamSupport.stream(pageUsers.getElementsOnPage().spliterator(), false).collect(Collectors.toList()));
-            totalNrOfElemsUser = pageUsers.getTotalNrOfElems();
-            prevButtonUser.setDisable(currentPageUser == 0);
-            nextButtonUser.setDisable((currentPageUser + 1) * pageSizeUser >= totalNrOfElemsUser);
+            pageUsers = userService.findAllOnPage(new Pageable(currentPageUser, pageSizeUser));
+        }
+
+        observableList.setAll(StreamSupport.stream(pageUsers.getElementsOnPage().spliterator(), false).collect(Collectors.toList()));
+        totalNrOfElemsUser = pageUsers.getTotalNrOfElems();
+        prevButtonUser.setDisable(currentPageUser == 0);
+        nextButtonUser.setDisable((currentPageUser + 1) * pageSizeUser >= totalNrOfElemsUser);
 
     }
+
 
     public void handleAdd() {
         Utilizator user = tableViewUser.getSelectionModel().getSelectedItem();
@@ -114,6 +120,16 @@ public class RequestFriendController implements Observer {
             }
         } else {
             MessageAlert.showErrorMessage(null, "Niciun utilizator selectat.");
+        }
+    }
+
+    private void updatePageUser() {
+        if (lblPgUser.getText().isEmpty() || Integer.parseInt(lblPgUser.getText()) == 0) {
+            initModel();
+        } else {
+            this.pageSizeUser = Integer.parseInt(lblPgUser.getText());
+            this.currentPageUser = 0;
+            initModel();
         }
     }
 

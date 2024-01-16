@@ -41,6 +41,7 @@ public class LoginController {
                     main.openUserStage(user);
 //                    stage.close();
                 } catch (Exception e){
+                    e.printStackTrace();
                     MessageAlert.showErrorMessage(null, "Eroare: " + e.getMessage());
                 }
             } else {

@@ -30,7 +30,7 @@ public class UserDBPagingRepository extends UserDBRepository implements PagingRe
 
 
     @Override
-    public Page<Utilizator> findAllOnPage(Pageable pageable) {
+    public Page<Utilizator> findAllOnPage(Pageable pageable, Long i) {
 
         List<Utilizator> utilizators = new ArrayList<>();
         try (
@@ -57,28 +57,16 @@ public class UserDBPagingRepository extends UserDBRepository implements PagingRe
                 String lastName = pageResultSet.getString("last_name");
                 Utilizator utilizator = new Utilizator(username, firstName, lastName);
                 utilizator.setId(id);
+
+                //TODO : AI UITAT ACEST RAND
+                utilizators.add(utilizator);
+                //TODO :
             }
 
             return new Page<>(utilizators, count);
 
             }
 
-//            statement.setInt(1,pageable.getPageSize());
-//            statement.setInt(2,pageable.getPageSize() * (pageable.getPageNumber()-1));
-//            ResultSet resultSet = statement.executeQuery();
-//            Set<Utilizator> users = new HashSet<>();
-//            while (resultSet.next()) {
-//                Long id= resultSet.getLong("id");
-//                String username = resultSet.getString("username");
-//                String firstName = resultSet.getString("first_name");
-//                String lastName = resultSet.getString("last_name");
-//
-//                Utilizator user=new Utilizator(username,firstName,lastName);
-//                user.setId(id);
-//                users.add(user);
-//            }
-//
-//            return new Page<>(pageable, users.stream()) ;
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
