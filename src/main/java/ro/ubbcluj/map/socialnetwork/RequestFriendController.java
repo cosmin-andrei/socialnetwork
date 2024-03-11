@@ -91,6 +91,7 @@ public class RequestFriendController implements Observer {
 
         int maxPageUser = (int) Math.ceil((double) pageUsers.getTotalNrOfElems() / pageSizeUser) - 1;
 
+
         if (currentPageUser > maxPageUser) {
             currentPageUser = maxPageUser;
 
